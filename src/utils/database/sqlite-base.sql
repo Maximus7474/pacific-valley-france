@@ -46,7 +46,9 @@ CREATE TRIGGER IF NOT EXISTS `set_participant_group_to_civil`
 BEFORE UPDATE ON `session_participants`
 FOR EACH ROW
 BEGIN
-    SET NEW.updated_at = CURRENT_TIMESTAMP;
+    UPDATE `session_participants`
+    SET `updated_at` = CURRENT_TIMESTAMP
+    WHERE ROWID = NEW.ROWID;
 END;
 
 CREATE TRIGGER IF NOT EXISTS `update_player_session_date`
@@ -60,5 +62,5 @@ END;
 
 /* Default required data */
 
-INSERT IGNORE INTO `player_groups` (`name`, `acronym`, `emoji`, `added_by`)
+INSERT OR IGNORE INTO `player_groups` (`name`, `acronym`, `emoji`, `added_by`)
     VALUES ('Civil', 'Civil', ':bust_in_silhouette:', 'System');
