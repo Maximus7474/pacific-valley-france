@@ -40,9 +40,10 @@ export default class SQLiteHandler {
      * 
      * @throws {Error} If the query execution fails.
      */
-    run(query: string, params: unknown[] = []): void {
+    run(query: string, params: unknown[] = []): number | bigint {
         const stmt = this.db.prepare(query);
-        stmt.run(...params);
+        const result = stmt.run(...params);
+        return result.lastInsertRowid ?? result.changes;
     }
 
     /**
