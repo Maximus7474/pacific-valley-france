@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `session_participants` (
 
 CREATE TABLE IF NOT EXISTS `player_groups` (
     `id`            INTEGER     PRIMARY KEY AUTOINCREMENT,
-    `name`          TEXT        NOT NULL,
+    `name`          TEXT        UNIQUE NOT NULL,
     `acronym`       TEXT        NOT NULL,
     `emoji`         TEXT        NOT NULL,
     `description`   TEXT        NULL,
