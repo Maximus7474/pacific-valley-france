@@ -60,13 +60,14 @@ export default class SQLiteHandler {
     /**
      * Executes a SQL query and retrieves all matching rows from the database.
      *
+     * @template T The expected type of each row returned by the query.
      * @param query - The SQL query string to execute.
      * @param params - An optional array of parameters to bind to the query. Defaults to an empty array.
      * @returns An array of objects representing the rows returned by the query.
      */
-    all(query: string, params: unknown[] = []): unknown[] {
+    all<T>(query: string, params: unknown[] = []): T[] {
         const stmt = this.db.prepare(query);
-        return stmt.all(...params);
+        return stmt.all(...params) as T[];
     }
 
     close(): void {
