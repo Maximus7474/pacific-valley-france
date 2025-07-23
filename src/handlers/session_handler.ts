@@ -1,6 +1,8 @@
-import { ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, ContainerBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextDisplayBuilder } from "discord.js";
+import { ActionRowBuilder, APISelectMenuOption, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import DB from "../utils/database";
 import Logger from "../utils/logger";
+import { DiscordClient } from "@types";
+import settings from "./settings";
 
 const logger = new Logger('Session Handler');
 
@@ -210,10 +212,180 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
                     logger.error(`Unable to insert group ${id} for session ${sessionId}:`, (err as Error).message);
                 }
             }
+
+            UpdateSessionMessage(interaction.client, sessionId);
         }
 
         logger.info(`Collector for session ${sessionId} ended. Reason: ${reason}`);
     });
 }
 
-export default { CreateSession };
+interface RawGroup {
+        id: number;
+        name: string;
+        acronym: string;
+        emoji: string;
+        description: string | null;
+};
+interface RawGroupCount extends RawGroup {
+    count: number;
+}
+
+async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number) {
+    const session = DB.get<{
+        timestamp: number;
+        details: string | null;
+        active: 0 | 1;
+        message_id: string | null;
+        created_by: string;
+    }>("SELECT `timestamp`, `details`, `active`, `message_id`, `created_by` FROM `sessions` WHERE `id` = ?", [ sessionId ]);
+
+    if (!session) {
+        logger.error('(UpdateSessionMessage) No session data was found for id:', sessionId);
+        return;
+    }
+
+    const sessionDateObj = new Date(session.timestamp);
+
+    const groups = DB.all<RawGroup>(
+        `SELECT G.id, G.name, G.acronym, G.emoji, G.description
+        FROM session_groups SG
+        LEFT JOIN player_groups G ON G.id = SG.\`group\`
+        WHERE SG.session = ?`,
+        [ sessionId ]
+    );
+
+    const groupSpecialCases = DB.get<{
+        absent: number;
+        late: number;
+    }>(
+        'SELECT '+
+        'COUNT(CASE WHEN `absent` = 1 THEN 1 ELSE NULL END) as `absent`, '+
+        'COUNT(CASE WHEN `late` = 1 THEN 1 ELSE NULL END) as `late` '+
+        'FROM `session_participants` WHERE `session` = ?',
+        [sessionId]
+    );
+
+    const rawGroupParticipants = DB.all<{
+        group: number;
+    }>("SELECT `group` FROM `session_participants` WHERE `session` = ?", [sessionId]);
+
+    const groupParticipants: {[key: string]: RawGroupCount} = {};
+    rawGroupParticipants.forEach(e => {
+        const group = groups.find((g) => g.id === e.group);
+
+        if (group) {
+            if (groupParticipants[group.id]) {
+                groupParticipants[group.id].count++;
+            } else {
+                groupParticipants[group.id] = {
+                    ...group,
+                    count: 1
+                };
+            }
+        }
+    });
+
+    const sessionDate = sessionDateObj
+        .toLocaleDateString('fr-FR', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const sessionTime = sessionDateObj
+        .toLocaleTimeString('fr-FR', { hour: 'numeric', minute: '2-digit' });
+
+    const group_select_options = groups.map(g => ({
+        default: false,
+        description: g.description ?? undefined,
+        emoji: g.emoji,
+        label: g.name,
+        value: `${g.id}`,
+    })) as APISelectMenuOption[];
+
+    console.log('group_select_options', group_select_options);
+
+    const container = new ContainerBuilder()
+        .addSectionComponents(
+            new SectionBuilder()
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        `# Session du ${sessionDate} à ${sessionTime}\n`+
+                        `> Début dans: <t:${Math.floor(sessionDateObj.getTime() / 1000)}:R>\n`+
+                        (session.details ?? '')
+                    )
+                )
+                .setThumbnailAccessory(
+                    new ThumbnailBuilder()
+                        .setURL(
+                                client.user?.avatarURL({ extension: 'webp', size: 256 })
+                            ??  'https://placehold.co/400'
+                        )
+                )
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+                Object.keys(groupParticipants).length > 0
+                    ? "Aucun participant"
+                    : (
+                        `Participants:\n`+
+                        Object.keys(groupParticipants).map(id => {
+                            const group = groupParticipants[id];
+
+                            return `* ${group.emoji} ${group.acronym}: ${group.count} membres`;
+                        })
+                    )
+            )
+        )
+        .addActionRowComponents(
+            new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+                new StringSelectMenuBuilder()
+                .setCustomId(`session-${sessionId}-group-selection`)
+                .setMaxValues(1)
+                .setMinValues(1)
+                .setOptions(group_select_options)
+            )
+        )
+        .addActionRowComponents(
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`session-${sessionId}-absent`)
+                    .setLabel(`Absent (${groupSpecialCases.absent})`)
+                    .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                    .setCustomId(`session-${sessionId}-late`)
+                    .setLabel(`En retard (${groupSpecialCases.late})`)
+                    .setStyle(ButtonStyle.Primary),
+            )
+        );
+
+    const channelId = settings.get('session_channel') as string | null;
+
+    if (!channelId) throw new Error(`No channel id is set in the settings under "session_channel" key !`)
+
+    const channel = await client.channels.fetch(channelId);
+
+    if (!channel) throw new Error(`No channel found for id: "${channelId}"`);
+    if (!channel.isTextBased()) throw new Error(`Channel: ${channel.name} (${channelId}) is not a text channel !`);
+
+    let message;
+    if (session.message_id) {
+        try {
+            message = await channel.messages.fetch({ message: session.message_id, cache: true });
+        } catch (err) {
+            logger.error(`(UpdateSessionMessage) Unable to fetch message (${(err as Error).message}), a new one will be sent.`);
+        }
+    }
+
+    if (!message) {
+        message = await (channel as TextChannel).send({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+        });
+        
+        DB.run('UPDATE `sessions` SET `message_id` = ? WHERE `id` = ?', [ message.id, sessionId ]);
+    } else {
+        message.edit({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+        });
+    }
+}
+
+export default { CreateSession, UpdateSessionMessage };
