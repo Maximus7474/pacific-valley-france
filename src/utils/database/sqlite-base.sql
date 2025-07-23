@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS `settings` (
     `name`          TEXT        PRIMARY KEY,
-    `date_type`     TEXT        NOT NULL,
+    `data_type`     TEXT        NOT NULL,
     `value`         TEXT        NOT NULL
 );
 
