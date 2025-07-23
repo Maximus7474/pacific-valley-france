@@ -1,4 +1,4 @@
-import { ActionRowBuilder, APISelectMenuOption, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { ActionRowBuilder, APISelectMenuOption, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import DB from "../utils/database";
 import Logger from "../utils/logger";
 import { DiscordClient } from "@types";
@@ -162,7 +162,10 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
                 .setAccentColor([0, 255, 0])
                 .addTextDisplayComponents(
                     new TextDisplayBuilder()
-                    .setContent(`Session (${sessionId}) pour le ${parsedDate.toLocaleString('fr-FR')} validée avec les groupes:\n* ${Array.from(selectedGroups).map(id => playerGroups.find(g => g.id === id)?.name || id).join(', ')}.`)
+                    .setContent(
+                        `Session (${sessionId}) pour le ${parsedDate.toLocaleString('fr-FR')} validée avec les groupes:\n`+
+                        `* ${Array.from(selectedGroups).map(id => playerGroups.find(g => g.id === id)?.name || id).join(', ')}.`
+                    )
                 )
             ] });
 
@@ -384,4 +387,160 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
     }
 }
 
-export default { CreateSession, UpdateSessionMessage };
+async function HandleInteraction(client: DiscordClient, interaction: ButtonInteraction | StringSelectMenuInteraction) {
+    const { customId } = interaction;
+
+    const match = customId.match(/^session-(\d+)-(group-selection|absent|late)$/);
+
+    if (!match) return;
+
+    const [, rawSessionId, action] = match;
+    const sessionId = parseInt(rawSessionId);
+    const { user } = interaction;
+
+    const userAnswer = DB.get<{
+        session: number;
+        user: string;
+        absent: 0 | 1;
+        late: 0 | 1;
+        group: number | null;
+        updated_at: number;
+    } | undefined>('SELECT * FROM `session_participants` WHERE `session` = ? AND `user` = ?', [ sessionId, user.id ]);
+
+    if (!userAnswer) DB.run('INSERT INTO `session_participants` (`session`, `user`) VALUES (?, ?)', [ sessionId, user.id ]);
+
+    if (action === 'absent') {
+        DB.run(
+            'UPDATE `session_participants` SET `late` = 0, `absent` = 1, `group` = ? WHERE `user` = ? AND `session` = ?',
+            [null, user.id, sessionId]
+        );
+
+        interaction.reply({
+            components: [new ContainerBuilder()
+                .setAccentColor([0, 255, 0])
+                .addSectionComponents(
+                    new SectionBuilder()
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(
+                                "# Absence noté\n"+
+                                "Vous êtes dorénavant marqué en tant qu'absent pour la session."
+                            )
+                        )
+                        .setThumbnailAccessory(
+                            new ThumbnailBuilder()
+                                .setURL(
+                                        client.user?.avatarURL({ extension: 'webp', size: 256 })
+                                    ??  'https://placehold.co/400'
+                                )
+                        )
+            )],
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
+        });
+    } else if (action === 'late') {
+        if (userAnswer && !userAnswer.group) {
+            return interaction.reply({
+                components: [new ContainerBuilder()
+                    .setAccentColor([255, 0, 0])
+                    .addSectionComponents(
+                    new SectionBuilder()
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(
+                                "# Impossible\n"+
+                                "Vous n'avez pas signaler votre présence, vous ne pouvez être en retard.\n"+
+                                "Signaler votre présence en choissiant un groupe."
+                            )
+                        )
+                        .setThumbnailAccessory(
+                            new ThumbnailBuilder()
+                                .setURL(
+                                        client.user?.avatarURL({ extension: 'webp', size: 256 })
+                                    ??  'https://placehold.co/400'
+                                )
+                        )
+                )],
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
+            });
+        }
+
+        DB.run(
+            'UPDATE `session_participants` SET `late` = 1, `absent` = 0 WHERE `user` = ? AND `session` = ?',
+            [user.id, sessionId]
+        );
+
+        interaction.reply({
+            components: [new ContainerBuilder()
+                .setAccentColor([0, 255, 0])
+                .addSectionComponents(
+                    new SectionBuilder()
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(
+                                "# Présence mis à jour\n"+
+                                "Vous êtes marqué comme pouvant avoid du retard pour la session."
+                            )
+                        )
+                        .setThumbnailAccessory(
+                            new ThumbnailBuilder()
+                                .setURL(
+                                        client.user?.avatarURL({ extension: 'webp', size: 256 })
+                                    ??  'https://placehold.co/400'
+                                )
+                        )
+            )],
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
+        });
+    } else if (action === 'group-selection') {
+        const groupId = parseInt((interaction as StringSelectMenuInteraction).values[0])
+
+        DB.run(
+            'UPDATE `session_participants` SET `absent` = 0, `group` = ? WHERE `user` = ? AND `session` = ?',
+            [groupId, user.id, sessionId]
+        );
+
+        const groupData = DB.get<{
+            acronym: string;
+            name: string;
+        }>('SELECT `acronym`, `name` FROM `player_groups` WHERE `id` = ?', [groupId])
+
+        interaction.reply({
+            components: [new ContainerBuilder()
+                .setAccentColor([0, 255, 0])
+                .addSectionComponents(
+                    new SectionBuilder()
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(
+                                `# Présence mis à jour\n`+
+                                `> Vous êtes noté comme présent dans le groupe: (${groupData.acronym}) ${groupData.name}`
+                            )
+                        )
+                        .setThumbnailAccessory(
+                            new ThumbnailBuilder()
+                                .setURL(
+                                        client.user?.avatarURL({ extension: 'webp', size: 256 })
+                                    ??  'https://placehold.co/400'
+                                )
+                        )
+            )],
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
+        });
+    } else {
+        return interaction.reply({
+            components: [new ContainerBuilder()
+                .setAccentColor([255, 0, 0])
+                .addSectionComponents(
+                new SectionBuilder()
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent("# Impossible")
+                    )
+                    .setThumbnailAccessory(
+                        new ThumbnailBuilder()
+                            .setURL('https://tenor.com/en-GB/view/non-mario-gif-10899016')
+                    )
+            )],
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
+        });
+    }
+
+    UpdateSessionMessage(client, sessionId);
+}
+
+export default { CreateSession, UpdateSessionMessage, HandleInteraction };
