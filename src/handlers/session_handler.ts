@@ -2,9 +2,11 @@ import { ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, ContainerBuild
 import DB from "../utils/database";
 import Logger from "../utils/logger";
 
+const logger = new Logger('Session Handler');
+
 const sessionCreation = new Map<number, Set<number>>();
 
-async function CreateSession(logger: Logger, interaction: ChatInputCommandInteraction) {
+async function CreateSession(interaction: ChatInputCommandInteraction) {
     const date = interaction.options.getString('date');
     const time = interaction.options.getString('time');
     const details = interaction.options.getString('details');
