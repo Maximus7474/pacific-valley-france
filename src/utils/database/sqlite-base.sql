@@ -1,4 +1,11 @@
 /* Tables */
+
+CREATE TABLE IF NOT EXISTS `settings` (
+    `name`          TEXT        PRIMARY KEY,
+    `date_type`     TEXT        NOT NULL,
+    `value`         TEXT        NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS `sessions` (
     `id`            INTEGER     PRIMARY KEY AUTOINCREMENT,
     `timestamp`     DATETIME    NOT NULL,
