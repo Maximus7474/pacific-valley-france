@@ -69,8 +69,6 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
         return option;
     });
 
-    logger.info(playerGroups);
-
     const container = new ContainerBuilder()
         .addTextDisplayComponents(
             new TextDisplayBuilder()
@@ -298,8 +296,6 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
         label: g.name,
         value: `${g.id}`,
     })) as APISelectMenuOption[];
-
-    console.log('group_select_options', group_select_options);
 
     const container = new ContainerBuilder()
         .addSectionComponents(
