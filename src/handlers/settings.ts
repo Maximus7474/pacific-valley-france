@@ -14,24 +14,26 @@ class SettingsManager {
             value: string;
         }>('SELECT * FROM `settings`');
 
-        for (const setting of rawSettings) {
+        for (const { name, data_type, value } of rawSettings) {
             let parsedData
 
-            if (setting.data_type === 'number') {
-                parsedData = parseInt(setting.value);
-            } else if (setting.data_type === 'object') {
-                parsedData = JSON.parse(setting.value);
-            } else if (setting.data_type === 'string') {
-                parsedData = setting.value;
+            if (data_type === 'number') {
+                parsedData = parseInt(value);
+            } else if (data_type === 'object') {
+                parsedData = JSON.parse(value);
+            } else if (data_type === 'string') {
+                parsedData = value;
             } else {
                 logger.error('Invalid "data_type" found in settings table !');
-                logger.error('Setting:', setting);
+                logger.error('Setting:', name, data_type, value);
             }
             
             if (parsedData) {
-                this.settings.set(setting.name, parsedData);
+                this.settings.set(name, parsedData);
             }
         }
+
+        logger.success(`Loaded ${this.settings.size}/${rawSettings.length} settings from database.`);
     }
 
     get<T>(key: string): T | null {
