@@ -321,7 +321,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
         )
         .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
-                Object.keys(groupParticipants).length > 0
+                Object.keys(groupParticipants).length === 0
                     ? "Aucun participant"
                     : (
                         `Participants:\n`+
