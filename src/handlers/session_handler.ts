@@ -2,7 +2,7 @@ import { ActionRowBuilder, APISelectMenuOption, ButtonBuilder, ButtonInteraction
 import DB from "../utils/database";
 import Logger from "../utils/logger";
 import { DiscordClient } from "@types";
-import settings from "./settings";
+import Settings from "./setting_handler";
 
 const logger = new Logger('Session Handler');
 
@@ -354,9 +354,9 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
             )
         );
 
-    const channelId = settings.get('session_channel') as string | null;
+    const channelId = Settings.get('session_channel') as string | null;
 
-    if (!channelId) throw new Error(`No channel id is set in the settings under "session_channel" key !`)
+    if (!channelId) throw new Error(`No channel id is set in the Settings under "session_channel" key !`)
 
     const channel = await client.channels.fetch(channelId);
 
