@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `sessions` (
     `timestamp`     DATETIME    NOT NULL,
     `details`       TEXT        NULL,
     `active`        INTEGER     DEFAULT 1,
+    `message_id`    TEXT        NULL,
     `created_by`    TEXT        NOT NULL,
     `created_at`    DATETIME    DEFAULT CURRENT_TIMESTAMP
 );
