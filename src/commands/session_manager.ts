@@ -64,7 +64,7 @@ export default new SlashCommand({
         logger.info(group, subCommand);
 
         if (group === 'create' && subCommand === 'create') {
-            SessionHandler.CreateSession(logger, interaction);
+            SessionHandler.CreateSession(interaction);
             return;
         }
     }
