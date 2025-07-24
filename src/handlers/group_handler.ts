@@ -26,6 +26,13 @@ function EditGroup(groupId: number, data: Partial<GroupData>): GenericResponse {
 
     if (data.acronym && data.acronym.length > 6) return { success: false, error: 'Acronym est trop long' };
 
+    if (!(data.name && data.acronym && data.emoji && data.description)) {
+        return {
+            success: false,
+            error: 'Aucune nouvelle valeure a été transmise.'
+        };
+    }
+
     const newData = {
         ...currentData,
         ...data,
