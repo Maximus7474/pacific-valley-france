@@ -21,7 +21,7 @@ function GetGroups(): RawGroup[] {
     return DB.all<RawGroup>('SELECT * FROM `player_groups`');
 }
 
-function EditGroup(groupId: number, data: Partial<RawGroup>): GenericResponse {
+function EditGroup(groupId: number, data: Partial<GroupData>): GenericResponse {
     const currentData = DB.get<RawGroup>('SELECT * FROM `player_groups` WHERE `id` = ?', [groupId]);
 
     if (data.acronym && data.acronym.length > 6) return { success: false, error: 'Acronym est trop long' };
