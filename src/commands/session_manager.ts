@@ -59,6 +59,7 @@ export default new SlashCommand({
                 })
             )
         )
+        // group subcommands
         .addSubcommandGroup(g =>
             g.setName('group')
             .setNameLocalizations({
@@ -68,6 +69,7 @@ export default new SlashCommand({
             .setDescriptionLocalizations({
                 fr: "Gérer les groupes de jeu pour les sessions",
             })
+            // Add a group
             .addSubcommand(c =>
                 c.setName('add')
                 .setNameLocalizations({
@@ -127,6 +129,7 @@ export default new SlashCommand({
                     .setMaxLength(255)
                 )
             )
+            // Edit a group
             .addSubcommand(c =>
                 c.setName('edit')
                 .setNameLocalizations({
@@ -196,6 +199,29 @@ export default new SlashCommand({
                     })
                     .setRequired(false)
                     .setMaxLength(255)
+                )
+            )
+            // Delete a group
+            .addSubcommand(c =>
+                c.setName('delete')
+                .setNameLocalizations({
+                    fr: 'supprimer',
+                })
+                .setDescription('Delete a groupe')
+                .setDescriptionLocalizations({
+                    fr: "Supprimer un groupe",
+                })
+                .addIntegerOption(o =>
+                    o.setName('group')
+                    .setNameLocalizations({
+                        fr: 'groupe',
+                    })
+                    .setDescription('Groupe to delete')
+                    .setDescriptionLocalizations({
+                        fr: "Groupe a supprimer",
+                    })
+                    .setRequired(true)
+                    .setAutocomplete(true)
                 )
             )
         ),
@@ -280,6 +306,30 @@ export default new SlashCommand({
                         })],
                     });
                 }
+            } else if (subCommand === 'delete') {
+                const groupId = interaction.options.getInteger('group', true);
+
+                const response = GroupHandler.DeleteGroup(groupId, interaction.user);
+
+                if (response.success) {
+                    interaction.reply({
+                        components: [GenericContainerResponse({
+                            title: 'Suppression de groupe',
+                            description: `Le groupe a été supprimer avec succès.`,
+                            color: [0, 255, 0],
+                            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+                        })],
+                    });
+                } else {
+                    interaction.reply({
+                        components: [GenericContainerResponse({
+                            title: 'Échec de la modification',
+                            description: `Le groupe n'as pas pu être supprimer:\n> ${response.error}`,
+                            color: [255, 0, 0],
+                            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+                        })],
+                    });
+                }
             }
         }
     },
@@ -288,7 +338,7 @@ export default new SlashCommand({
         const subCommand = interaction.options.getSubcommand();
         const group = interaction.options.getSubcommand();
 
-        if (group === 'group' && subCommand === 'edit') {
+        if (group === 'group' && (subCommand === 'edit' || subCommand === 'delete')) {
             const groupes = GroupHandler.GetGroups();
 
             const filtered = groupes.filter(group => 
