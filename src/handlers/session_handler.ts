@@ -529,10 +529,11 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
             [groupId, user.id, sessionId]
         );
 
+        // Will be defined as there's a valid check earlier on
         const groupData = DB.get<{
             acronym: string;
             name: string;
-        }>('SELECT `acronym`, `name` FROM `player_groups` WHERE `id` = ?', [groupId])
+        }>('SELECT `acronym`, `name` FROM `player_groups` WHERE `id` = ?', [groupId])!;
 
         interaction.reply({
             components: [new ContainerBuilder()
