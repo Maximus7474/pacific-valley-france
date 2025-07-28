@@ -1,7 +1,7 @@
 import { ActionRowBuilder, APISelectMenuOption, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import DB from "../utils/database";
 import Logger from "../utils/logger";
-import { DiscordClient } from "@types";
+import { DiscordClient, GroupedParticipants, SessionParticipantResponse } from "@types";
 import Settings from "./setting_handler";
 import { GenericContainerResponse, GetEmojiResolvable } from "../utils/utils";
 
@@ -350,6 +350,10 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
                     .setCustomId(`session-${sessionId}-late`)
                     .setLabel(`En retard (${groupSpecialCases.late})`)
                     .setStyle(ButtonStyle.Primary),
+                new ButtonBuilder()
+                    .setCustomId(`session-${sessionId}-recap`)
+                    .setLabel(`Bilan de présence`)
+                    .setStyle(ButtonStyle.Secondary),
             )
         );
 
@@ -389,7 +393,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
 async function HandleInteraction(client: DiscordClient, interaction: ButtonInteraction | StringSelectMenuInteraction) {
     const { customId } = interaction;
 
-    const match = customId.match(/^session-(\d+)-(group-selection|absent|late)$/);
+    const match = customId.match(/^session-(\d+)-(group-selection|absent|late|recap)$/);
 
     if (!match) return;
 
@@ -407,7 +411,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         }, true));
     }
 
-    if (isValid.active === 0) {
+    if (action !== 'recap' && isValid.active === 0) {
         return interaction.reply(GenericContainerResponse({
             title: 'Session désactivé',
             color: [255, 0, 0],
@@ -415,7 +419,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         }, true));
     }
 
-    if (isValid.timestamp < Date.now()) {
+    if (action !== 'recap' && isValid.timestamp < Date.now()) {
         return interaction.reply(GenericContainerResponse({
             title: 'Session terminé',
             color: [255, 0, 0],
@@ -548,6 +552,75 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
             )],
             flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
         });
+    } else if (action === 'recap') {
+        const responses = DB.all<SessionParticipantResponse>(
+            `SELECT
+                sp.user,
+                sp.absent,
+                sp.late,
+                pg.emoji AS group_emoji,
+                pg.acronym AS group_acronym
+            FROM
+                session_participants AS sp
+            LEFT JOIN
+                player_groups AS pg
+            ON
+                sp."group" = pg.id
+            WHERE
+                sp.session = ?`,
+            [ sessionId ]
+        );
+
+        const groupedResponses = responses.reduce((acc: GroupedParticipants, participant) => {
+            console.log(participant);
+
+            if (participant.absent === 1) {
+                acc.absent.push(participant);
+            } else {
+                const groupKey = participant.group_acronym;
+                
+                if (!acc[groupKey]) {
+                    acc[groupKey] = [];
+                }
+
+                acc[groupKey].push(participant);
+            }
+            return acc;
+        }, { absent: [] });
+
+        const { absent, ...presentResponses } = groupedResponses;
+
+        const absentList = absent.map(({ user }: SessionParticipantResponse) => `* <@${user}>`);
+
+        const presentList = Object.entries(presentResponses)
+            .filter(([groupName]) => groupName !== 'absent')
+            .map(([groupName, participants]) => {
+                if (participants.length === 0) {
+                    return '';
+                }
+
+                const groupHeader = `### ${groupName}`;
+
+                const participantList = participants.map(({ user, late }) =>
+                    `* ${late === 1 ? '⌛ ' : ''}<@${user}>`
+                ).join('\n');
+
+                return `${groupHeader}\n${participantList}`;
+            })
+            .filter(Boolean);
+
+        let description = '';
+
+        if (presentList.length > 0) description += presentList.join('\n\n');
+        if (absentList.length > 0) description += '\n\n### Absent:\n' + absentList.join('\n');
+
+        if (description.length < 1) description = 'Aucune présence encore signalée.'
+
+        return interaction.reply(GenericContainerResponse({
+            title: 'Réponses actuelles pour la session',
+            description,
+            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+        }, true));
     } else {
         return interaction.reply({
             components: [new ContainerBuilder()
