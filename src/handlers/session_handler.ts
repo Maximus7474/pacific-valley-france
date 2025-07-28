@@ -3,7 +3,7 @@ import DB from "../utils/database";
 import Logger from "../utils/logger";
 import { DiscordClient } from "@types";
 import Settings from "./setting_handler";
-import { GenericContainerResponse } from "../utils/utils";
+import { GenericContainerResponse, GetEmojiResolvable } from "../utils/utils";
 
 const logger = new Logger('Session Handler');
 
@@ -62,9 +62,7 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
             .setValue(`${group.id}`);
 
         if (group.emoji) {
-            option.setEmoji({
-                name: group.emoji,
-            });
+            option.setEmoji(GetEmojiResolvable(group.emoji));
         }
 
         return option;
