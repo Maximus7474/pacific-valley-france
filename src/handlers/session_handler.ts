@@ -266,7 +266,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
         'COUNT(CASE WHEN `late` = 1 THEN 1 ELSE NULL END) as `late` '+
         'FROM `session_participants` WHERE `session` = ?',
         [sessionId]
-    );
+    ) ?? { absent: 0, late: 0 };
 
     const rawGroupParticipants = DB.all<{
         group: number;
