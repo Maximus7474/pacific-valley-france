@@ -402,33 +402,27 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
     const isValid = DB.get<{active: 1 | 0; timestamp: number}>('SELECT `active`, `timestamp` FROM `sessions` WHERE `id` = ?', [ sessionId ]);
 
     if (!isValid) {
-        return interaction.reply({
-            components: [GenericContainerResponse({
-                title: 'Session inconnu',
-                color: [255, 0, 0],
-                thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-            })],
-        });
+        return interaction.reply(GenericContainerResponse({
+            title: 'Session inconnu',
+            color: [255, 0, 0],
+            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+        }, true));
     }
 
     if (isValid.active === 0) {
-        return interaction.reply({
-            components: [GenericContainerResponse({
-                title: 'Session désactivé',
-                color: [255, 0, 0],
-                thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-            })],
-        });
+        return interaction.reply(GenericContainerResponse({
+            title: 'Session désactivé',
+            color: [255, 0, 0],
+            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+        }, true));
     }
 
     if (isValid.timestamp < Date.now()) {
-        return interaction.reply({
-            components: [GenericContainerResponse({
-                title: 'Session terminé',
-                color: [255, 0, 0],
-                thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-            })],
-        });
+        return interaction.reply(GenericContainerResponse({
+            title: 'Session terminé',
+            color: [255, 0, 0],
+            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+        }, true));
     }
 
     const userAnswer = DB.get<{
