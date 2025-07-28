@@ -3,6 +3,7 @@ import DB from "../utils/database";
 import Logger from "../utils/logger";
 import { DiscordClient } from "@types";
 import Settings from "./setting_handler";
+import { GenericContainerResponse } from "../utils/utils";
 
 const logger = new Logger('Session Handler');
 
@@ -397,6 +398,38 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
     const [, rawSessionId, action] = match;
     const sessionId = parseInt(rawSessionId);
     const { user } = interaction;
+
+    const isValid = DB.get<{active: 1 | 0; timestamp: number}>('SELECT `active`, `timestamp` FROM `sessions` WHERE `id` = ?', [ sessionId ]);
+
+    if (!isValid) {
+        return interaction.reply({
+            components: [GenericContainerResponse({
+                title: 'Session inconnu',
+                color: [255, 0, 0],
+                thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+            })],
+        });
+    }
+
+    if (isValid.active === 0) {
+        return interaction.reply({
+            components: [GenericContainerResponse({
+                title: 'Session désactivé',
+                color: [255, 0, 0],
+                thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+            })],
+        });
+    }
+
+    if (isValid.timestamp < Date.now()) {
+        return interaction.reply({
+            components: [GenericContainerResponse({
+                title: 'Session terminé',
+                color: [255, 0, 0],
+                thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+            })],
+        });
+    }
 
     const userAnswer = DB.get<{
         session: number;
