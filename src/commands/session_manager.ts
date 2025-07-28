@@ -2,6 +2,7 @@ import { ContainerBuilder, SectionBuilder, SlashCommandBuilder, TextDisplayBuild
 import SlashCommand from "../classes/slash_command";
 import SessionHandler from "../handlers/session_handler";
 import GroupHandler from "../handlers/group_handler";
+import { GenericContainerResponse } from "../utils/utils";
 
 export default new SlashCommand({
     name: 'session',
@@ -220,53 +221,26 @@ export default new SlashCommand({
 
                 if (response.success) {
                     interaction.reply({
-                        components: [new ContainerBuilder()
-                            .setAccentColor([0, 255, 0])
-                            .addSectionComponents(
-                                new SectionBuilder()
-                                .addTextDisplayComponents(
-                                    new TextDisplayBuilder().setContent(
-                                        `## Création de groupe\n`+
-                                        `Le groupe a été créer avec succès. Détails:\n`+
-                                        `* Nom: ${name}\n`+
-                                        `* Acronyme: \`${acronym}\`\n`+
-                                        `* Émoji: ${emoji}\n`+
-                                        (description ? `* Description:\n > ${description}\n` : '* Aucune Description')
-                                    )
-                                )
-                                .setThumbnailAccessory(
-                                    new ThumbnailBuilder()
-                                        .setURL(
-                                                client.user?.avatarURL({ extension: 'webp', size: 256 })
-                                            ??  'https://placehold.co/400'
-                                        )
-                                )
-                            )
-                        ]
+                        components: [GenericContainerResponse({
+                            title: 'Création de groupe',
+                            description: `Le groupe a été créer avec succès. Détails:\n`+
+                                `* Nom: ${name}\n`+
+                                `* Acronyme: \`${acronym}\`\n`+
+                                `* Émoji: ${emoji}\n`+
+                                (description ? `* Description:\n > ${description}\n` : '* Aucune Description'),
+                            color: [0, 255, 0],
+                            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+                        })],
                     });
                 } else {
                     interaction.reply({
-                        components: [new ContainerBuilder()
-                            .setAccentColor([255, 0, 0])
-                            .addSectionComponents(
-                                new SectionBuilder()
-                                .addTextDisplayComponents(
-                                    new TextDisplayBuilder().setContent(
-                                        `## Échec de la création de groupe\n`+
-                                        `Le groupe n'as pas pu être créer:\n`+
-                                        response.error
-                                    )
-                                )
-                                .setThumbnailAccessory(
-                                    new ThumbnailBuilder()
-                                        .setURL(
-                                                client.user?.avatarURL({ extension: 'webp', size: 256 })
-                                            ??  'https://placehold.co/400'
-                                        )
-                                )
-                            )
-                        ]
-                    })
+                        components: [GenericContainerResponse({
+                            title: 'Échec de la création de groupe',
+                            description: `Le groupe n'as pas pu être créer:\n> ${response.error}`,
+                            color: [255, 0, 0],
+                            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+                        })],
+                    });
                 }
                 return;
             } else if (subCommand === 'edit') {
@@ -285,53 +259,26 @@ export default new SlashCommand({
 
                 if (response.success) {
                     interaction.reply({
-                        components: [new ContainerBuilder()
-                            .setAccentColor([0, 255, 0])
-                            .addSectionComponents(
-                                new SectionBuilder()
-                                .addTextDisplayComponents(
-                                    new TextDisplayBuilder().setContent(
-                                        `## Modification de groupe\n`+
-                                        `Le groupe a été modifier avec succès. Détails mis à jour:\n`+
-                                        ( name ? `* Nom: ${name}\n` : '' ) +
-                                        ( acronym ? `* Acronyme: \`${acronym}\`\n` : '' ) +
-                                        ( emoji ? `* Émoji: ${emoji}\n` : '' ) +
-                                        ( description ? `* Description:\n > ${description}\n` : '')
-                                    )
-                                )
-                                .setThumbnailAccessory(
-                                    new ThumbnailBuilder()
-                                        .setURL(
-                                                client.user?.avatarURL({ extension: 'webp', size: 256 })
-                                            ??  'https://placehold.co/400'
-                                        )
-                                )
-                            )
-                        ]
+                        components: [GenericContainerResponse({
+                            title: 'Modification de groupe',
+                            description: `Le groupe a été modifier avec succès. Détails mis à jour:\n`+
+                                ( name ? `* Nom: ${name}\n` : '' ) +
+                                ( acronym ? `* Acronyme: \`${acronym}\`\n` : '' ) +
+                                ( emoji ? `* Émoji: ${emoji}\n` : '' ) +
+                                ( description ? `* Description:\n > ${description}\n` : ''),
+                            color: [0, 255, 0],
+                            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+                        })],
                     });
                 } else {
                     interaction.reply({
-                        components: [new ContainerBuilder()
-                            .setAccentColor([255, 0, 0])
-                            .addSectionComponents(
-                                new SectionBuilder()
-                                .addTextDisplayComponents(
-                                    new TextDisplayBuilder().setContent(
-                                        `## Échec de la modification\n`+
-                                        `Le groupe n'as pas pu être modifier:\n`+
-                                        response.error
-                                    )
-                                )
-                                .setThumbnailAccessory(
-                                    new ThumbnailBuilder()
-                                        .setURL(
-                                                client.user?.avatarURL({ extension: 'webp', size: 256 })
-                                            ??  'https://placehold.co/400'
-                                        )
-                                )
-                            )
-                        ]
-                    })
+                        components: [GenericContainerResponse({
+                            title: 'Échec de la modification',
+                            description: `Le groupe n'as pas pu être modifier:\n> ${response.error}`,
+                            color: [255, 0, 0],
+                            thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
+                        })],
+                    });
                 }
             }
         }
