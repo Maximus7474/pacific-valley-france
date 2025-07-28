@@ -571,6 +571,19 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
             [ sessionId ]
         );
 
+        const rawPlayerGroups = DB.all<{
+            id: number;
+            name: string;
+            acronym: string;
+            emoji: string;
+            description: string | null;
+        }>('SELECT * FROM `player_groups`');
+
+        const playerGroups = rawPlayerGroups.reduce((groups: {[key: string]: RawGroup}, grp) => {
+            groups[grp.acronym] = grp;
+            return groups;
+        }, {});
+
         const groupedResponses = responses.reduce((acc: GroupedParticipants, participant) => {
             if (participant.absent === 1) {
                 acc.absent.push(participant);
@@ -599,7 +612,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
                     acc[groupName] = '';
                 } else {
                     const participantList = participants.map(({ user, late }) =>
-                        `${late === 1 ? '⌛ ' : ''}<@${user}>`
+                        `* ${late === 1 ? '⌛ ' : ''}<@${user}>`
                     ).join('\n');
                     acc[groupName] = participantList;
                 }
@@ -608,8 +621,9 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
 
         const fields = [];
         for (const grp in presentList) {
+            const group = playerGroups[grp];
             fields.push({
-                name: grp,
+                name: `${group.emoji} ${group.acronym}`,
                 value: presentList[grp],
                 inline: true,
             } as APIEmbedField);
