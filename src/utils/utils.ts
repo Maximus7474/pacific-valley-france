@@ -1,4 +1,4 @@
-import { ContainerBuilder, InteractionReplyOptions, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
+import { ComponentEmojiResolvable, ContainerBuilder, InteractionReplyOptions, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
 import * as fs from 'fs';
 import path from 'path';
 import { red, yellow } from 'colors';
@@ -61,4 +61,18 @@ export const GenericContainerResponse = (data: GenericContainerResponseData, eph
         components: [container],
         flags: ephemeral ? [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral] : [MessageFlags.IsComponentsV2],
     };
+}
+
+export const GetEmojiResolvable = (emoji: string): ComponentEmojiResolvable => {
+    const match = emoji.match(/<a?:\w+:(\d+)>/);
+
+    if (match) return {
+        id: match[1]
+    }
+
+    if ([...emoji].length === 1) {
+        return { name: emoji };
+    }
+
+    return { name: '❓' };
 }
