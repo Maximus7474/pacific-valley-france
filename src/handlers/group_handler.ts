@@ -72,4 +72,20 @@ function AddGroup(data: GroupData, user: User): GenericResponse {
     }
 }
 
-export default { EditGroup, GetGroups, AddGroup };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function DeleteGroup(groupId: number, user: User): GenericResponse {
+    const exists = DB.get<{name: string}>('SELECT `name` FROM `player_groups` WHERE `id` = ?', [ groupId ]);
+
+    if (!exists) return { success: false, error: `L'identifiant: ${groupId} n'existe pas.` };
+    try {
+        const result = DB.run('DELETE FROM `player_groups` WHERE `id` = ?', [ groupId ] );
+
+        if (result !== 0) return { success: true };
+        else return { success: false, error: 'Impossible a supprimer en BDD' };
+    } catch (err) {
+        logger.error(`An error occured when deleting the group ${exists.name} (${groupId}):`, (err as Error).message);
+        return { success: false, error: "Une erreure c'est produite" };
+    }
+}
+
+export default { EditGroup, GetGroups, AddGroup, DeleteGroup };
