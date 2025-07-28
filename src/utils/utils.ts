@@ -57,10 +57,8 @@ export const GenericContainerResponse = (data: GenericContainerResponseData, eph
 
     container.addSectionComponents(mainSection);
 
-    console.log('Generated container:', container);
-
     return {
         components: [container],
-        flags: ephemeral ? [MessageFlags.IsComponentsV2] : [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+        flags: ephemeral ? [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral] : [MessageFlags.IsComponentsV2],
     };
 }
