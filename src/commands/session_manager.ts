@@ -246,8 +246,8 @@ export default new SlashCommand({
                 }, interaction.user);
 
                 if (response.success) {
-                    interaction.reply({
-                        components: [GenericContainerResponse({
+                    interaction.reply(
+                        GenericContainerResponse({
                             title: 'Création de groupe',
                             description: `Le groupe a été créer avec succès. Détails:\n`+
                                 `* Nom: ${name}\n`+
@@ -256,17 +256,17 @@ export default new SlashCommand({
                                 (description ? `* Description:\n > ${description}\n` : '* Aucune Description'),
                             color: [0, 255, 0],
                             thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-                        })],
-                    });
+                        }, true)
+                    );
                 } else {
-                    interaction.reply({
-                        components: [GenericContainerResponse({
+                    interaction.reply(
+                        GenericContainerResponse({
                             title: 'Échec de la création de groupe',
                             description: `Le groupe n'as pas pu être créer:\n> ${response.error}`,
                             color: [255, 0, 0],
                             thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-                        })],
-                    });
+                        }, true)
+                    );
                 }
                 return;
             } else if (subCommand === 'edit') {
@@ -284,8 +284,8 @@ export default new SlashCommand({
                 });
 
                 if (response.success) {
-                    interaction.reply({
-                        components: [GenericContainerResponse({
+                    interaction.reply(
+                        GenericContainerResponse({
                             title: 'Modification de groupe',
                             description: `Le groupe a été modifier avec succès. Détails mis à jour:\n`+
                                 ( name ? `* Nom: ${name}\n` : '' ) +
@@ -294,17 +294,17 @@ export default new SlashCommand({
                                 ( description ? `* Description:\n > ${description}\n` : ''),
                             color: [0, 255, 0],
                             thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-                        })],
-                    });
+                        }, true)
+                    );
                 } else {
-                    interaction.reply({
-                        components: [GenericContainerResponse({
+                    interaction.reply(
+                        GenericContainerResponse({
                             title: 'Échec de la modification',
                             description: `Le groupe n'as pas pu être modifier:\n> ${response.error}`,
                             color: [255, 0, 0],
                             thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-                        })],
-                    });
+                        }, true)
+                    );
                 }
             } else if (subCommand === 'delete') {
                 const groupId = interaction.options.getInteger('group', true);
@@ -312,23 +312,23 @@ export default new SlashCommand({
                 const response = GroupHandler.DeleteGroup(groupId, interaction.user);
 
                 if (response.success) {
-                    interaction.reply({
-                        components: [GenericContainerResponse({
+                    interaction.reply(
+                        GenericContainerResponse({
                             title: 'Suppression de groupe',
                             description: `Le groupe a été supprimer avec succès.`,
                             color: [0, 255, 0],
                             thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-                        })],
-                    });
+                        }, true)
+                    );
                 } else {
-                    interaction.reply({
-                        components: [GenericContainerResponse({
+                    interaction.reply(
+                        GenericContainerResponse({
                             title: 'Échec de la modification',
                             description: `Le groupe n'as pas pu être supprimer:\n> ${response.error}`,
                             color: [255, 0, 0],
                             thumbnail: client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400'
-                        })],
-                    });
+                        }, true)
+                    );
                 }
             }
         }
