@@ -1,5 +1,10 @@
+import { ContainerBuilder, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
 import * as fs from 'fs';
 import path from 'path';
+import { red, yellow } from 'colors';
+import Logger from './logger';
+
+const logger = new Logger('Utils');
 
 export const getFilesFromDir = (dirPath: string): string[] => {
     const files: string[] = [];
@@ -18,4 +23,41 @@ export const getFilesFromDir = (dirPath: string): string[] => {
     });
 
     return files;
+}
+
+type GenericContainerResponseData = {
+    title: string;
+    description?: string;
+    color?: [number, number, number];
+    thumbnail?: string;
+}
+export const GenericContainerResponse = (data: GenericContainerResponseData): ContainerBuilder => {
+    const container = new ContainerBuilder();
+
+    if (data.color) container.setAccentColor(data.color);
+
+    const mainSection = new SectionBuilder()
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+                `## ${data.title}`+
+                (data.description ? `\n${data.description}` : '')
+            )
+        );
+
+    if (data.thumbnail) {
+        try {
+            new URL(data.thumbnail);
+            mainSection.setThumbnailAccessory(new ThumbnailBuilder({
+                media: {
+                    url: data.thumbnail,
+                },
+            }));
+        } catch (err) {
+            logger.error(`Invalid thumbnail URL was passed to ${yellow('GenericContainerResponse')}: ${red(data.thumbnail)}`, (err as Error).message);
+        }
+    }
+
+    container.addSectionComponents(mainSection);
+
+    return container;
 }
