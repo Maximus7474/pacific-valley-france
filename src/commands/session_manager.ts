@@ -227,11 +227,9 @@ export default new SlashCommand({
         ),
     callback: async (logger, client, interaction) => {
         const subCommand = interaction.options.getSubcommand();
-        const group = interaction.options.getSubcommand();
+        const group = interaction.options.getSubcommandGroup();
 
-        logger.info(group, subCommand);
-
-        if (group === 'create' && subCommand === 'create') {
+        if (group === null && subCommand === 'create') {
             SessionHandler.CreateSession(interaction);
             return;
         } else if (group === 'group') {
