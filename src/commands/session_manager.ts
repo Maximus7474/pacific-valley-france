@@ -1,4 +1,4 @@
-import { ContainerBuilder, SectionBuilder, SlashCommandBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 import SlashCommand from "../classes/slash_command";
 import SessionHandler from "../handlers/session_handler";
 import GroupHandler from "../handlers/group_handler";
