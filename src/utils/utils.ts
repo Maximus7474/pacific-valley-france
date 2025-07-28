@@ -1,4 +1,4 @@
-import { ContainerBuilder, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
+import { ContainerBuilder, InteractionReplyOptions, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
 import * as fs from 'fs';
 import path from 'path';
 import { red, yellow } from 'colors';
@@ -31,7 +31,8 @@ type GenericContainerResponseData = {
     color?: [number, number, number];
     thumbnail?: string;
 }
-export const GenericContainerResponse = (data: GenericContainerResponseData): ContainerBuilder => {
+
+export const GenericContainerResponse = (data: GenericContainerResponseData, ephemeral: boolean): InteractionReplyOptions => {
     const container = new ContainerBuilder();
 
     if (data.color) container.setAccentColor(data.color);
@@ -47,11 +48,8 @@ export const GenericContainerResponse = (data: GenericContainerResponseData): Co
     if (data.thumbnail) {
         try {
             new URL(data.thumbnail);
-            mainSection.setThumbnailAccessory(new ThumbnailBuilder({
-                media: {
-                    url: data.thumbnail,
-                },
-            }));
+            mainSection.setThumbnailAccessory(new ThumbnailBuilder()
+                .setURL(data.thumbnail));
         } catch (err) {
             logger.error(`Invalid thumbnail URL was passed to ${yellow('GenericContainerResponse')}: ${red(data.thumbnail)}`, (err as Error).message);
         }
@@ -59,5 +57,10 @@ export const GenericContainerResponse = (data: GenericContainerResponseData): Co
 
     container.addSectionComponents(mainSection);
 
-    return container;
+    console.log('Generated container:', container);
+
+    return {
+        components: [container],
+        flags: ephemeral ? [MessageFlags.IsComponentsV2] : [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+    };
 }
