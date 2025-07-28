@@ -7,6 +7,8 @@ export default new EventHandler({
     eventName: Events.InteractionCreate,
     type: "on",
     callback: (logger, client, interaction) => {
+        if (!interaction.customId) return;
+
         Sessions.HandleInteraction(client, interaction);
     }
 });
