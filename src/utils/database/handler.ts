@@ -54,9 +54,9 @@ export default class SQLiteHandler {
      * @param params - An optional array of parameters to bind to the query.
      * @returns The first row of the result set as an object, or `undefined` if no rows are found.
      */
-    get<T>(query: string, params: unknown[] = []): T {
+    get<T>(query: string, params: unknown[] = []): T | undefined {
         const stmt = this.db.prepare(query);
-        return stmt.get(...params) as T;
+        return stmt.get(...params) as T | undefined;
     }
 
     /**
