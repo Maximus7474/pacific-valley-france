@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import SlashCommand from "../classes/slash_command";
 import SessionHandler from "../handlers/session_handler";
 import GroupHandler from "../handlers/group_handler";
@@ -9,6 +9,7 @@ export default new SlashCommand({
     guildSpecific: true,
     slashcommand: new SlashCommandBuilder()
         .setName('session')
+        .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageEvents)
         .setNameLocalizations({
             fr: "session",
         })
