@@ -72,3 +72,6 @@ END;
 
 INSERT OR IGNORE INTO `player_groups` (`name`, `acronym`, `emoji`, `added_by`)
     VALUES ('Civil', 'Civil', ':bust_in_silhouette:', 'System');
+
+INSERT OR IGNORE INTO `settings` (`name`, `data_type`, `value`)
+    VALUES ('session_channel', 'string', '1258888271262388444');
