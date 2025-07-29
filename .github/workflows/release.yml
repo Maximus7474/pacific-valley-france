@@ -12,6 +12,7 @@ jobs:
 
     permissions:
       contents: write
+      pull-requests: read
 
     steps:
 
@@ -73,8 +74,9 @@ jobs:
         id: auto_release
         with:
           repo_token: '${{ secrets.GITHUB_TOKEN }}'
-          title: 'Version: ${{ env.RELEASE_VERSION }}'
+          title: '${{ env.RELEASE_VERSION }}'
           prerelease: false
+          files: ${{ github.event.repository.name }}.zip
 
         env:
           CI: false
