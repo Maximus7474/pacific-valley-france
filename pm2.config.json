@@ -1,6 +1,6 @@
 {
     "apps": [{
-        "name": "Discord Typescript Bot",
+        "name": "Pacific Valley France Bot",
         "cwd": "./",
         "script": "npm run start",
         "log_date_format": ""
