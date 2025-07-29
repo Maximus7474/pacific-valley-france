@@ -1,7 +1,7 @@
 import { ComponentEmojiResolvable, ContainerBuilder, InteractionReplyOptions, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
 import * as fs from 'fs';
 import path from 'path';
-import { red, yellow } from 'colors';
+import { red, yellow } from './colours';
 import Logger from './logger';
 
 const logger = new Logger('Utils');
