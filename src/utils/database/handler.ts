@@ -52,12 +52,13 @@ export default class SQLiteHandler {
      *                 Defaults to an empty array if not provided.
      * 
      * @throws {Error} If the query execution fails.
+     * @returns {[lastInsertRowid: number | bigint, changes: number]}
      */
-    async run(query: string, params: unknown[] = []): Promise<number | bigint> {
+    async run(query: string, params: unknown[] = []): Promise<[number | bigint, number]> {
         if (!this.initialized) await this.waitForInitialization();
         const stmt = this.db.prepare(query);
         const result = stmt.run(...params);
-        return result.lastInsertRowid ?? result.changes;
+        return [result.lastInsertRowid, result.changes];
     }
 
     /**
