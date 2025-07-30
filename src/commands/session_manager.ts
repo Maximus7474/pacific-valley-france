@@ -335,7 +335,7 @@ export default new SlashCommand({
     autocomplete: async (logger, client, interaction) => {
         const focusedValue = interaction.options.getFocused();
         const subCommand = interaction.options.getSubcommand();
-        const group = interaction.options.getSubcommand();
+        const group = interaction.options.getSubcommandGroup();
 
         if (group === 'group' && (subCommand === 'edit' || subCommand === 'delete')) {
             const groupes = await GroupHandler.GetGroups();
