@@ -436,7 +436,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         updated_at: number;
     } | undefined>('SELECT * FROM `session_participants` WHERE `session` = ? AND `user` = ?', [ sessionId, user.id ]);
 
-    if (!userAnswer) DB.run('INSERT INTO `session_participants` (`session`, `user`) VALUES (?, ?)', [ sessionId, user.id ]);
+    if (!userAnswer && action !== 'recap') DB.run('INSERT INTO `session_participants` (`session`, `user`) VALUES (?, ?)', [ sessionId, user.id ]);
 
     if (action === 'absent') {
         DB.run(
