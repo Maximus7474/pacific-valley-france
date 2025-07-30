@@ -7,7 +7,7 @@ import { GenericContainerResponse, GetEmojiResolvable } from "../utils/utils";
 
 const logger = new Logger('Session Handler');
 
-const sessionCreation = new Map<number, Set<number>>();
+const sessionCreation = new Map<number | bigint, Set<number>>();
 
 async function CreateSession(interaction: ChatInputCommandInteraction) {
     const date = interaction.options.getString('date');
@@ -43,10 +43,10 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
         });
     }
 
-    const sessionId = await DB.run(
+    const [sessionId,] = await DB.run(
         'INSERT INTO `sessions` (`timestamp`, `details`, `created_by`) VALUES (?, ?, ?)',
         [ parsedDate.getTime(), details ?? null, author.id ]
-    ) as number;
+    );
 
     const playerGroups = await DB.all<{
         id: number;
@@ -231,7 +231,7 @@ interface RawGroupCount extends RawGroup {
     count: number;
 }
 
-async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number) {
+async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number | bigint) {
     const session = await DB.get<{
         timestamp: number;
         details: string | null;
