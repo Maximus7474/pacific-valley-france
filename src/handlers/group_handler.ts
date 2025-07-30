@@ -17,8 +17,12 @@ interface RawGroup {
 
 type GroupData = Omit<RawGroup, 'id' | 'added_at' | 'added_by'>;
 
+let groups: RawGroup[] | null = null;
 async function GetGroups(): Promise<RawGroup[]> {
-    return await DB.all<RawGroup>('SELECT * FROM `player_groups`');
+    if (!groups) {
+        groups = await DB.all<RawGroup>('SELECT * FROM `player_groups`');
+    }
+    return groups;
 }
 
 async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<GenericResponse> {
@@ -46,8 +50,12 @@ async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<Gen
             [newData.name, newData.acronym, newData.emoji, newData.description, groupId],
         );
 
-        if (result === 1) return { success: true };
-        else return { success: false, error: 'Impossible de mettre à jour en BDD' };
+        if (result === 1) {
+            groups = null;
+            return { success: true };
+        } else {
+            return { success: false, error: 'Impossible de mettre à jour en BDD' };
+        }
     } catch (err) {
         logger.error(`An error occured when updating group (${groupId}):`, (err as Error).message);
         return { success: false, error: "Une erreure c'est produite" };
@@ -64,8 +72,12 @@ async function AddGroup(data: GroupData, user: User): Promise<GenericResponse> {
             [data.name, data.acronym, data.emoji, data.description, user.id]
         );
 
-        if (result !== 0) return { success: true };
-        else return { success: false, error: 'Impossible a créer en BDD' };
+        if (result !== 0) {
+            groups = null;
+            return { success: true };
+        } else {
+            return { success: false, error: 'Impossible a créer en BDD' };
+        }
     } catch (err) {
         logger.error(`An error occured when creating a group (${data.name}):`, (err as Error).message);
         return { success: false, error: "Une erreure c'est produite" };
@@ -80,8 +92,12 @@ async function DeleteGroup(groupId: number, user: User): Promise<GenericResponse
     try {
         const result = await DB.run('DELETE FROM `player_groups` WHERE `id` = ?', [ groupId ] );
 
-        if (result !== 0) return { success: true };
-        else return { success: false, error: 'Impossible a supprimer en BDD' };
+        if (result !== 0) {
+            groups = null;
+            return { success: true };
+        } else {
+            return { success: false, error: 'Impossible a supprimer en BDD' };
+        }
     } catch (err) {
         logger.error(`An error occured when deleting the group ${exists.name} (${groupId}):`, (err as Error).message);
         return { success: false, error: "Une erreure c'est produite" };
