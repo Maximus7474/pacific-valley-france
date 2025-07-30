@@ -43,12 +43,12 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
         });
     }
 
-    const sessionId = DB.run(
+    const sessionId = await DB.run(
         'INSERT INTO `sessions` (`timestamp`, `details`, `created_by`) VALUES (?, ?, ?)',
         [ parsedDate.getTime(), details ?? null, author.id ]
     ) as number;
 
-    const playerGroups = DB.all<{
+    const playerGroups = await DB.all<{
         id: number;
         name: string;
         acronym: string;
@@ -232,7 +232,7 @@ interface RawGroupCount extends RawGroup {
 }
 
 async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number) {
-    const session = DB.get<{
+    const session = await DB.get<{
         timestamp: number;
         details: string | null;
         active: 0 | 1;
@@ -247,7 +247,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
 
     const sessionDateObj = new Date(session.timestamp);
 
-    const groups = DB.all<RawGroup>(
+    const groups = await DB.all<RawGroup>(
         `SELECT G.id, G.name, G.acronym, G.emoji, G.description
         FROM session_groups SG
         LEFT JOIN player_groups G ON G.id = SG.\`group\`
@@ -255,7 +255,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
         [ sessionId ]
     );
 
-    const groupSpecialCases = DB.get<{
+    const groupSpecialCases = await DB.get<{
         absent: number;
         late: number;
     }>(
@@ -266,7 +266,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
         [sessionId]
     ) ?? { absent: 0, late: 0 };
 
-    const rawGroupParticipants = DB.all<{
+    const rawGroupParticipants = await DB.all<{
         group: number;
     }>("SELECT `group` FROM `session_participants` WHERE `session` = ?", [sessionId]);
 
@@ -401,7 +401,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
     const sessionId = parseInt(rawSessionId);
     const { user } = interaction;
 
-    const isValid = DB.get<{active: 1 | 0; timestamp: number}>('SELECT `active`, `timestamp` FROM `sessions` WHERE `id` = ?', [ sessionId ]);
+    const isValid = await DB.get<{active: 1 | 0; timestamp: number}>('SELECT `active`, `timestamp` FROM `sessions` WHERE `id` = ?', [ sessionId ]);
 
     if (!isValid) {
         return interaction.reply(GenericContainerResponse({
@@ -427,7 +427,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         }, true));
     }
 
-    const userAnswer = DB.get<{
+    const userAnswer = await DB.get<{
         session: number;
         user: string;
         absent: 0 | 1;
@@ -526,10 +526,10 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         );
 
         // Will be defined as there's a valid check earlier on
-        const groupData = DB.get<{
+        const groupData = await DB.get<{
             acronym: string;
             name: string;
-        }>('SELECT `acronym`, `name` FROM `player_groups` WHERE `id` = ?', [groupId])!;
+        }>('SELECT `acronym`, `name` FROM `player_groups` WHERE `id` = ?', [groupId]);
 
         interaction.reply({
             components: [new ContainerBuilder()
@@ -539,7 +539,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
                         .addTextDisplayComponents(
                             new TextDisplayBuilder().setContent(
                                 `# Présence mis à jour\n`+
-                                `> Vous êtes noté comme présent dans le groupe: (${groupData.acronym}) ${groupData.name}`
+                                `> Vous êtes noté comme présent dans le groupe: (${groupData!.acronym}) ${groupData!.name}`
                             )
                         )
                         .setThumbnailAccessory(
@@ -553,7 +553,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
             flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]
         });
     } else if (action === 'recap') {
-        const responses = DB.all<SessionParticipantResponse>(
+        const responses = await DB.all<SessionParticipantResponse>(
             `SELECT
                 sp.user,
                 sp.absent,
@@ -571,7 +571,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
             [ sessionId ]
         );
 
-        const rawPlayerGroups = DB.all<{
+        const rawPlayerGroups = await DB.all<{
             id: number;
             name: string;
             acronym: string;
