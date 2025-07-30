@@ -8,32 +8,36 @@ class SettingsManager {
     private settings: Map<string, any> = new Map();
 
     constructor() {
-        const rawSettings = DB.all<{
+        DB.all<{
             name: string;
             data_type: 'number' | 'string' | 'object',
             value: string;
-        }>('SELECT * FROM `settings`');
+        }>('SELECT * FROM `settings`')
+        .then((rawSettings) => {
+            for (const { name, data_type, value } of rawSettings) {
+                let parsedData
 
-        for (const { name, data_type, value } of rawSettings) {
-            let parsedData
-
-            if (data_type === 'number') {
-                parsedData = parseInt(value);
-            } else if (data_type === 'object') {
-                parsedData = JSON.parse(value);
-            } else if (data_type === 'string') {
-                parsedData = value;
-            } else {
-                logger.error('Invalid "data_type" found in settings table !');
-                logger.error('Setting:', name, data_type, value);
+                if (data_type === 'number') {
+                    parsedData = parseInt(value);
+                } else if (data_type === 'object') {
+                    parsedData = JSON.parse(value);
+                } else if (data_type === 'string') {
+                    parsedData = value;
+                } else {
+                    logger.error('Invalid "data_type" found in settings table !');
+                    logger.error('Setting:', name, data_type, value);
+                }
+                
+                if (parsedData) {
+                    this.settings.set(name, parsedData);
+                }
             }
-            
-            if (parsedData) {
-                this.settings.set(name, parsedData);
-            }
-        }
 
-        logger.success(`Loaded ${this.settings.size}/${rawSettings.length} settings from database.`);
+            logger.success(`Loaded ${this.settings.size}/${rawSettings.length} settings from database.`);
+        })
+        .catch(err => {
+            logger.error('Unable to load settings from database:', err.message)
+        });
     }
 
     get<T>(key: string): T | null {
