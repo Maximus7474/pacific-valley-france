@@ -17,12 +17,12 @@ interface RawGroup {
 
 type GroupData = Omit<RawGroup, 'id' | 'added_at' | 'added_by'>;
 
-function GetGroups(): RawGroup[] {
-    return DB.all<RawGroup>('SELECT * FROM `player_groups`');
+async function GetGroups(): Promise<RawGroup[]> {
+    return await DB.all<RawGroup>('SELECT * FROM `player_groups`');
 }
 
-function EditGroup(groupId: number, data: Partial<GroupData>): GenericResponse {
-    const currentData = DB.get<RawGroup>('SELECT * FROM `player_groups` WHERE `id` = ?', [groupId]);
+async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<GenericResponse> {
+    const currentData = await DB.get<RawGroup>('SELECT * FROM `player_groups` WHERE `id` = ?', [groupId]);
 
     if (data.acronym && data.acronym.length > 6) return { success: false, error: 'Acronym est trop long' };
 
@@ -41,7 +41,7 @@ function EditGroup(groupId: number, data: Partial<GroupData>): GenericResponse {
     if (newData.description && newData.description.length < 3) newData.description = null;
 
     try {
-        const result = DB.run(
+        const result = await DB.run(
             'UPDATE `player_groups` SET `name` = ?, `acronym` = ?, `emoji` = ?, `description` = ? WHERE `id` = ?',
             [newData.name, newData.acronym, newData.emoji, newData.description, groupId],
         );
@@ -54,12 +54,12 @@ function EditGroup(groupId: number, data: Partial<GroupData>): GenericResponse {
     }
 }
 
-function AddGroup(data: GroupData, user: User): GenericResponse {
+async function AddGroup(data: GroupData, user: User): Promise<GenericResponse> {
     if (data.acronym && data.acronym.length > 6) return { success: false, error: 'Acronym est trop long' };
     if (data.description && data.description.length < 3) data.description = null;
 
     try {
-        const result = DB.run(
+        const result = await DB.run(
             'INSERT INTO `player_groups` (`name`, `acronym`, `emoji`, `description`, `added_by`) VALUES (?, ?, ?, ?, ?)',
             [data.name, data.acronym, data.emoji, data.description, user.id]
         );
@@ -73,12 +73,12 @@ function AddGroup(data: GroupData, user: User): GenericResponse {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function DeleteGroup(groupId: number, user: User): GenericResponse {
-    const exists = DB.get<{name: string}>('SELECT `name` FROM `player_groups` WHERE `id` = ?', [ groupId ]);
+async function DeleteGroup(groupId: number, user: User): Promise<GenericResponse> {
+    const exists = await DB.get<{name: string}>('SELECT `name` FROM `player_groups` WHERE `id` = ?', [ groupId ]);
 
     if (!exists) return { success: false, error: `L'identifiant: ${groupId} n'existe pas.` };
     try {
-        const result = DB.run('DELETE FROM `player_groups` WHERE `id` = ?', [ groupId ] );
+        const result = await DB.run('DELETE FROM `player_groups` WHERE `id` = ?', [ groupId ] );
 
         if (result !== 0) return { success: true };
         else return { success: false, error: 'Impossible a supprimer en BDD' };
