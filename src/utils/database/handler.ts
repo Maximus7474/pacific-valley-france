@@ -30,6 +30,7 @@ export default class SQLiteHandler {
         }
 
         this.db.exec(sqlScript);
+        this.initialized = true;
     }
 
     async waitForInitialization() {
