@@ -30,7 +30,7 @@ async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<Gen
 
     if (data.acronym && data.acronym.length > 6) return { success: false, error: 'Acronym est trop long' };
 
-    if (!(data.name && data.acronym && data.emoji && data.description)) {
+    if (!data.name && !data.acronym && !data.emoji && !data.description) {
         return {
             success: false,
             error: 'Aucune nouvelle valeure a été transmise.'
@@ -39,10 +39,13 @@ async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<Gen
 
     const newData = {
         ...currentData,
-        ...data,
     };
 
-    if (newData.description && newData.description.length < 3) newData.description = null;
+    if (data.name && data.name.length > 3) newData.name = data.name;
+    if (data.acronym && data.acronym.length > 1) newData.acronym = data.acronym;
+    if (data.emoji && data.emoji.length > 0) newData.emoji = data.emoji;
+    if (data.description && data.description.length > 3) newData.description = data.description;
+    else if (data.description && data.description.length < 3) newData.description = null;
 
     try {
         const result = await DB.run(
