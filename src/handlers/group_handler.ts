@@ -47,13 +47,16 @@ async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<Gen
     if (data.description && data.description.length > 3) newData.description = data.description;
     else if (data.description && data.description.length < 3) newData.description = null;
 
+    console.log('newData', newData);
+    console.log('groupId', groupId);
+
     try {
-        const result = await DB.run(
+        const [, changes] = await DB.run(
             'UPDATE `player_groups` SET `name` = ?, `acronym` = ?, `emoji` = ?, `description` = ? WHERE `id` = ?',
             [newData.name, newData.acronym, newData.emoji, newData.description, groupId],
         );
 
-        if (result === 1) {
+        if (changes === 1) {
             groups = null;
             return { success: true };
         } else {
@@ -70,12 +73,12 @@ async function AddGroup(data: GroupData, user: User): Promise<GenericResponse> {
     if (data.description && data.description.length < 3) data.description = null;
 
     try {
-        const result = await DB.run(
+        const [, changes] = await DB.run(
             'INSERT INTO `player_groups` (`name`, `acronym`, `emoji`, `description`, `added_by`) VALUES (?, ?, ?, ?, ?)',
             [data.name, data.acronym, data.emoji, data.description, user.id]
         );
 
-        if (result !== 0) {
+        if (changes !== 0) {
             groups = null;
             return { success: true };
         } else {
@@ -93,9 +96,9 @@ async function DeleteGroup(groupId: number, user: User): Promise<GenericResponse
 
     if (!exists) return { success: false, error: `L'identifiant: ${groupId} n'existe pas.` };
     try {
-        const result = await DB.run('DELETE FROM `player_groups` WHERE `id` = ?', [ groupId ] );
+        const [,changes] = await DB.run('DELETE FROM `player_groups` WHERE `id` = ?', [ groupId ] );
 
-        if (result !== 0) {
+        if (changes !== 0) {
             groups = null;
             return { success: true };
         } else {
