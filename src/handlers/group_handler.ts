@@ -47,9 +47,6 @@ async function EditGroup(groupId: number, data: Partial<GroupData>): Promise<Gen
     if (data.description && data.description.length > 3) newData.description = data.description;
     else if (data.description && data.description.length < 3) newData.description = null;
 
-    console.log('newData', newData);
-    console.log('groupId', groupId);
-
     try {
         const [, changes] = await DB.run(
             'UPDATE `player_groups` SET `name` = ?, `acronym` = ?, `emoji` = ?, `description` = ? WHERE `id` = ?',
