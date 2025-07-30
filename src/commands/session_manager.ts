@@ -240,7 +240,7 @@ export default new SlashCommand({
                 const emoji = interaction.options.getString('emoji', true);
                 const description = interaction.options.getString('description');
                 
-                const response = GroupHandler.AddGroup({
+                const response = await GroupHandler.AddGroup({
                     name, acronym, emoji, description
                 }, interaction.user);
 
@@ -275,7 +275,7 @@ export default new SlashCommand({
                 const emoji = interaction.options.getString('emoji');
                 const description = interaction.options.getString('description');
 
-                const response = GroupHandler.EditGroup(groupId, {
+                const response = await GroupHandler.EditGroup(groupId, {
                     name: name ?? undefined,
                     acronym: acronym ?? undefined,
                     emoji: emoji ?? undefined,
@@ -308,7 +308,7 @@ export default new SlashCommand({
             } else if (subCommand === 'delete') {
                 const groupId = interaction.options.getInteger('group', true);
 
-                const response = GroupHandler.DeleteGroup(groupId, interaction.user);
+                const response = await GroupHandler.DeleteGroup(groupId, interaction.user);
 
                 if (response.success) {
                     interaction.reply(
@@ -338,7 +338,7 @@ export default new SlashCommand({
         const group = interaction.options.getSubcommand();
 
         if (group === 'group' && (subCommand === 'edit' || subCommand === 'delete')) {
-            const groupes = GroupHandler.GetGroups();
+            const groupes = await GroupHandler.GetGroups();
 
             const filtered = groupes.filter(group => 
                     group.name.toLowerCase().startsWith(focusedValue.toLowerCase())
