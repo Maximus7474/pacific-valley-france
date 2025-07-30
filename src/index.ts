@@ -4,12 +4,11 @@ import { DiscordClient } from './types';
 
 import Config from './utils/config';
 import Database from './utils/database';
+Database.init();
 
 import LoadCommands from './utils/initialisation/load_commands';
 import LoadEvents from './utils/initialisation/load_events';
 import LoadStaticMessages from './utils/initialisation/load_static_messages';
-
-if (Database) Database.init();
 
 const client: DiscordClient = new Client({
     intents: [
