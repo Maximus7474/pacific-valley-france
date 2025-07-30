@@ -8,6 +8,7 @@ const logger = new Logger('SQLiteHandler');
 
 export default class SQLiteHandler {
     private db: Database.Database;
+    private initialized: boolean = false;
 
     constructor({SQLITE_PATH}: DBConnectionDetails) {
         if (typeof SQLITE_PATH !== 'string') {
@@ -29,7 +30,19 @@ export default class SQLiteHandler {
         }
 
         this.db.exec(sqlScript);
+        console.log('Finished DB.init()');
     }
+
+    async waitForInitialization() {
+        return new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (this.initialized) {
+                    clearInterval(checkInterval);
+                    resolve(true);
+                }
+            }, 100);
+        });
+    };
 
     /**
      * Executes a SQL query that does not return any result (e.g., INSERT, UPDATE, DELETE).
@@ -40,7 +53,8 @@ export default class SQLiteHandler {
      * 
      * @throws {Error} If the query execution fails.
      */
-    run(query: string, params: unknown[] = []): number | bigint {
+    async run(query: string, params: unknown[] = []): Promise<number | bigint> {
+        if (!this.initialized) await this.waitForInitialization();
         const stmt = this.db.prepare(query);
         const result = stmt.run(...params);
         return result.lastInsertRowid ?? result.changes;
@@ -54,7 +68,8 @@ export default class SQLiteHandler {
      * @param params - An optional array of parameters to bind to the query.
      * @returns The first row of the result set as an object, or `undefined` if no rows are found.
      */
-    get<T>(query: string, params: unknown[] = []): T | undefined {
+    async get<T>(query: string, params: unknown[] = []): Promise<T | undefined> {
+        if (!this.initialized) await this.waitForInitialization();
         const stmt = this.db.prepare(query);
         return stmt.get(...params) as T | undefined;
     }
@@ -67,7 +82,8 @@ export default class SQLiteHandler {
      * @param params - An optional array of parameters to bind to the query. Defaults to an empty array.
      * @returns An array of objects representing the rows returned by the query.
      */
-    all<T>(query: string, params: unknown[] = []): T[] {
+    async all<T>(query: string, params: unknown[] = []): Promise<T[]> {
+        if (!this.initialized) await this.waitForInitialization();
         const stmt = this.db.prepare(query);
         return stmt.all(...params) as T[];
     }
