@@ -8,17 +8,35 @@ export default new SlashCommand({
     guildSpecific: true,
     slashcommand: new SlashCommandBuilder()
         .setName("settings")
+        .setNameLocalizations({
+            'fr': 'parametres'
+        })
         .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM)
-        .setDescription("Manage bot settings for this guild.")
+        .setDescription("Manage bot settings.")
+        .setDescriptionLocalizations({
+            'fr': 'Gérer les paramètres du bot.'
+        })
         .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName("get")
+                .setNameLocalizations({
+                    'fr': 'chercher'
+                })
                 .setDescription("Get the current value of a specific setting.")
+                .setDescriptionLocalizations({
+                    'fr': 'Obtenir la valeur pour un paramètre spécifique'
+                })
                 .addStringOption(o =>
                     o
                         .setName("key")
+                        .setNameLocalizations({
+                            'fr': 'parametre'
+                        })
                         .setDescription("The name of the setting to retrieve.")
+                        .setDescriptionLocalizations({
+                            'fr': 'Le paramètre que vous cherchez'
+                        })
                         .setRequired(true)
                         .setAutocomplete(true)
                 )
@@ -26,22 +44,43 @@ export default new SlashCommand({
         .addSubcommand(subcommand =>
             subcommand
                 .setName("set")
+                .setNameLocalizations({
+                    'fr': 'definir'
+                })
                 .setDescription("Set a new value for a specific setting.")
+                .setDescriptionLocalizations({
+                    'fr': 'Définir une nouvelle valeure pour un paramètre'
+                })
                 .addStringOption(o =>
                     o
                         .setName("key")
+                        .setNameLocalizations({
+                            'fr': 'parametre'
+                        })
                         .setDescription("The name of the setting to set.")
+                        .setDescriptionLocalizations({
+                            'fr': 'Le paramètre a définir'
+                        })
                         .setRequired(true)
                 )
                 .addStringOption(o =>
                     o
                         .setName("value")
+                        .setNameLocalizations({
+                            'fr': 'valeur'
+                        })
                         .setDescription("The new value for the setting.")
+                        .setDescriptionLocalizations({
+                            'fr': 'La nouvelle valeure pour le paramètre'
+                        })
                         .setRequired(true)
                 )
                 .addStringOption(o =>
                     o.setName("type")
                     .setDescription("The type of the new value for the setting.")
+                    .setDescriptionLocalizations({
+                        'fr': 'Le type de donnée pour la valeure.'
+                    })
                     .setRequired(false)
                     .setChoices(
                         { name: 'string', value: 'string' },
@@ -55,7 +94,7 @@ export default new SlashCommand({
             !interaction.inGuild() &&
             interaction.user.id !== client.application?.owner?.id
         ) {
-            await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+            await interaction.reply({ content: "Cette commande ne peut être utilisée que sur un serveur.", flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -68,7 +107,7 @@ export default new SlashCommand({
             if (value !== null) {
                 const embed = new EmbedBuilder()
                     .setColor(0x5865F2)
-                    .setTitle(`Setting: \`${key}\``)
+                    .setTitle(`Paramèètre: \`${key}\``)
                     .setDescription(`\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``)
                     .addFields(
                         { name: "Type", value: `\`${typeof value}\``, inline: true }
@@ -77,7 +116,7 @@ export default new SlashCommand({
 
                 await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             } else {
-                await interaction.reply({ content: `Setting \`${key}\` not found.`, flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: `Paramètre \`${key}\` est introuvable.`, flags: MessageFlags.Ephemeral });
             }
         } else if (subcommand === "set") {
             const key = interaction.options.getString("key", true);
@@ -89,7 +128,7 @@ export default new SlashCommand({
                 const numValue = parseInt(rawValue.trim());
                 if (isNaN(numValue)) {
                     await interaction.reply({
-                        content: `Invalid integer value provided for \`${key}\`. Please enter a valid number.`,
+                        content: `Valeur entière invalide fournie pour \`${key}\`. Veuillez saisir un numéro valide..`,
                         ephemeral: true
                     });
                     return;
@@ -100,7 +139,7 @@ export default new SlashCommand({
                     parsedValue = JSON.parse(rawValue.trim());
                 } catch (err) {
                     await interaction.reply({
-                        content: `Invalid JSON object provided for \`${key}\`. Please ensure it's valid JSON.\n> ${(err as Error).message}`,
+                        content: `Objet JSON invalide fourni pour \`${key}\`. Veuillez vous assurer qu'il s'agit d'un JSON valide..\n> ${(err as Error).message}`,
                         ephemeral: true
                     });
                     return;
@@ -111,8 +150,8 @@ export default new SlashCommand({
 
             const embed = new EmbedBuilder()
                 .setColor(0x57F287)
-                .setTitle("Setting Updated!")
-                .setDescription(`Successfully set \`${key}\` to \`\`\`json\n${JSON.stringify(parsedValue, null, 2)}\n\`\`\``)
+                .setTitle("Paramètre mis à jour!")
+                .setDescription(`Configuration réussie du paramètre \`${key}\` avec:\n\`\`\`json\n${JSON.stringify(parsedValue, null, 2)}\n\`\`\``)
                 .addFields(
                     { name: "Type", value: `\`${typeof parsedValue}\``, inline: true }
                 )
