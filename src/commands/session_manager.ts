@@ -59,6 +59,14 @@ export default new SlashCommand({
                     fr: "Detail de la session, planning spécifique, etc..."
                 })
             )
+            .addRoleOption(o =>
+                o.setName('role')
+                .setDescription('Role to mention on session announcement')
+                .setDescriptionLocalizations({
+                    'fr': 'Role à mentioner au moment du partage de la session.'
+                })
+                .setRequired(false)
+            )
         )
         // group subcommands
         .addSubcommandGroup(g =>
