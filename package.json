@@ -1,6 +1,6 @@
 {
   "name": "pacific-valley-organiser",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Discord bot built for the french branch of the Pacific Valley Project, to simplify the organisation of game sessions",
   "main": "dist/index.js",
   "type": "module",
