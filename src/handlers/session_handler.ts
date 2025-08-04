@@ -10,21 +10,21 @@ const logger = new Logger('Session Handler');
 const sessionCreation = new Map<number | bigint, Set<number>>();
 
 async function CreateSession(interaction: ChatInputCommandInteraction) {
-    const date = interaction.options.getString('date');
-    const time = interaction.options.getString('time');
+    const date = interaction.options.getString('date', true);
+    const time = interaction.options.getString('time', true);
     const details = interaction.options.getString('details');
     const author = interaction.user;
 
     const dateRegex = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
     const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
-    if (!date || !dateRegex.test(date)) {
+    if (!dateRegex.test(date)) {
         return interaction.reply({
             content: `Paramètre de date invalide. Veuillez utiliser le format JJ/MM/AAAA (ex: 31/12/2023).`,
             flags: MessageFlags.Ephemeral,
         });
     }
-    if (!time || !timeRegex.test(time)) {
+    if (!timeRegex.test(time)) {
         return interaction.reply({
             content: `Paramètre d'heure invalide. Veuillez utiliser le format HH:MM (ex: 19:30).`,
             flags: MessageFlags.Ephemeral,
