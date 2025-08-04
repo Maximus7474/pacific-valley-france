@@ -1,4 +1,4 @@
-import { ActionRowBuilder, APIEmbedField, APISelectMenuOption, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, EmbedBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { ActionRowBuilder, APIEmbedField, APISelectMenuOption, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, EmbedBuilder, MessageFlags, Role, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import DB from "../utils/database";
 import Logger from "../utils/logger";
 import { DiscordClient, GroupedParticipants, SessionParticipantResponse } from "@types";
@@ -13,6 +13,7 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
     const date = interaction.options.getString('date', true);
     const time = interaction.options.getString('time', true);
     const details = interaction.options.getString('details');
+    const role = interaction.options.getString('role');
     const author = interaction.user;
 
     const dateRegex = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
@@ -231,7 +232,7 @@ interface RawGroupCount extends RawGroup {
     count: number;
 }
 
-async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number | bigint) {
+async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number | bigint, mention?: Role) {
     const session = await DB.get<{
         timestamp: number;
         details: string | null;
@@ -384,6 +385,7 @@ async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: n
         DB.run('UPDATE `sessions` SET `message_id` = ? WHERE `id` = ?', [ message.id, sessionId ]);
     } else {
         message.edit({
+            content: mention ? `<@&${mention.id}>` : null,
             components: [container],
             flags: MessageFlags.IsComponentsV2,
         });
