@@ -12,3 +12,6 @@ package-lock.json
 
 # database related files
 *.db
+
+# update script
+update.sh
