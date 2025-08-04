@@ -604,18 +604,17 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         const { absent, ...presentResponses } = groupedResponses;
 
         const absentList = absent
-            .map(({ user }: SessionParticipantResponse) => `* <@${user}>`)
-            .join('\n');
+            .map(({ user }: SessionParticipantResponse) => `* <@${user}>`);
 
         const presentList = Object.entries(presentResponses)
             .filter(([groupName]) => groupName !== 'absent')
-            .reduce((acc: {[key: string]: string;}, [groupName, participants]) => {
+            .reduce((acc: {[key: string]: string[];}, [groupName, participants]) => {
                 if (participants.length === 0) {
-                    acc[groupName] = '';
+                    acc[groupName] = [];
                 } else {
                     const participantList = participants.map(({ user, late }) =>
                         `* ${late === 1 ? '⌛ ' : ''}<@${user}>`
-                    ).join('\n');
+                    );
                     acc[groupName] = participantList;
                 }
                 return acc;
@@ -625,23 +624,23 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         for (const grp in presentList) {
             const group = playerGroups[grp];
             fields.push({
-                name: `${group.emoji} ${group.acronym}`,
-                value: presentList[grp],
+                name: `${group.emoji} (${presentList[grp].length}) ${group.acronym}`,
+                value: presentList[grp].join('\n'),
                 inline: true,
             } as APIEmbedField);
         }
 
         if (absentList.length > 0) {
             fields.push({
-                name: 'Absent',
-                value: absentList,
-                inline: false,
+                name: `:x: (${absentList.length}) Absent`,
+                value: absentList.join('\n'),
+                inline: true,
             } as APIEmbedField);
         }
 
         const embed = new EmbedBuilder()
             .setTitle('Réponses actuelles pour la session')
-            .setThumbnail(client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400')
+            // .setThumbnail(client.user?.avatarURL({ extension: 'webp', size: 256 }) ?? 'https://placehold.co/400')
             .setFields(fields);
         
         interaction.reply({
