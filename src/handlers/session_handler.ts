@@ -1,4 +1,4 @@
-import { ActionRowBuilder, APIEmbedField, APISelectMenuOption, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, EmbedBuilder, MessageFlags, Role, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { ActionRowBuilder, APIEmbedField, APIRole, APISelectMenuOption, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Client, ContainerBuilder, EmbedBuilder, MessageFlags, Role, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import DB from "../utils/database";
 import Logger from "../utils/logger";
 import { DiscordClient, GroupedParticipants, SessionParticipantResponse } from "@types";
@@ -13,7 +13,7 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
     const date = interaction.options.getString('date', true);
     const time = interaction.options.getString('time', true);
     const details = interaction.options.getString('details');
-    const role = interaction.options.getString('role');
+    const role = interaction.options.getRole('role');
     const author = interaction.user;
 
     const dateRegex = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
@@ -214,7 +214,7 @@ async function CreateSession(interaction: ChatInputCommandInteraction) {
                 }
             }
 
-            UpdateSessionMessage(interaction.client, sessionId);
+            UpdateSessionMessage(interaction.client, sessionId, role);
         }
 
         logger.info(`Collector for session ${sessionId} ended. Reason: ${reason}`);
@@ -232,7 +232,7 @@ interface RawGroupCount extends RawGroup {
     count: number;
 }
 
-async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number | bigint, mention?: Role) {
+async function UpdateSessionMessage(client: DiscordClient | Client, sessionId: number | bigint, mention?: Role | APIRole | null) {
     const session = await DB.get<{
         timestamp: number;
         details: string | null;
