@@ -55,7 +55,14 @@ export default new SlashCommand({
                     new SectionBuilder()
                         .addTextDisplayComponents(
                             new TextDisplayBuilder().setContent(
-                                `### ${member.user.tag}`
+                                `### ${member.user.tag}\n` +
+                                (member.joinedAt
+                                    ? `* __Rejoint le serveur:__ <t:${Math.floor(member.joinedAt.getTime() / 1000)}:d> (<t:${Math.floor(member.joinedAt.getTime() / 1000)}:R>)\n`
+                                    : ''
+                                ) +
+                                `* __Création du Compte:__ <t:${Math.floor(member.user.createdAt.getTime() / 1000)}:d> (<t:${Math.floor(member.user.createdAt.getTime() / 1000)}:R>)\n` +
+                                `* __Role le plus élevé:__ ${highestRole.name} (ID: ${highestRole.id})\n` +
+                                (permissionsString ? `* __Permissions:__ ${permissionsString}\n` : '')
                             )
                         )
                         .setThumbnailAccessory(
@@ -67,17 +74,6 @@ export default new SlashCommand({
                                     ??  'https://placehold.co/400'
                                 )
                         )
-                )
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(
-                        (member.joinedAt
-                            ? `> Rejoint le serveur: <t:${Math.floor(member.joinedAt.getTime() / 1000)}:d> (<t:${Math.floor(member.joinedAt.getTime() / 1000)}:R>)\n`
-                            : ''
-                        ) +
-                        `> Création du Compte: <t:${Math.floor(member.user.createdAt.getTime() / 1000)}:d> (<t:${Math.floor(member.user.createdAt.getTime() / 1000)}:R>)\n` +
-                        `* Role le plus élevé: ${highestRole.name} (ID: ${highestRole.id})\n` +
-                        (permissionsString ? `* Permissions: ${permissionsString}\n` : '')
-                    )
                 );
 
         await interaction.reply({
