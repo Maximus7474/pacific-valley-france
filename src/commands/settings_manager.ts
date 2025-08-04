@@ -1,4 +1,4 @@
-import { EmbedBuilder, MessageFlags, PermissionsBitField, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, InteractionContextType, MessageFlags, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import SlashCommand from "../classes/slash_command";
 import DB from "../utils/database";
 import SettingsManager from "../handlers/setting_handler";
@@ -8,6 +8,7 @@ export default new SlashCommand({
     guildSpecific: true,
     slashcommand: new SlashCommandBuilder()
         .setName("settings")
+        .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM)
         .setDescription("Manage bot settings for this guild.")
         .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
         .addSubcommand(subcommand =>
@@ -50,7 +51,10 @@ export default new SlashCommand({
                 )
         ),
     callback: async (logger, client, interaction) => {
-        if (!interaction.inGuild()) {
+        if (
+            !interaction.inGuild() &&
+            interaction.user.id !== client.application?.owner?.id
+        ) {
             await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
             return;
         }
