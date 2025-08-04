@@ -6,7 +6,7 @@ import path from 'path';
 
 export default new SlashCommand({
     name: 'ping',
-    guildSpecific: true,
+    guildSpecific: false,
     slashcommand: new SlashCommandBuilder()
         .setName('backup')
         .setContexts(InteractionContextType.BotDM)
