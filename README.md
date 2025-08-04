@@ -25,6 +25,13 @@
    - `DISCORD_BOT_TOKEN`: Your bot's authentication token from Discord's developer portal.
    - `MAIN_GUILD_ID`: The Discord ID of your main guild.
 
+3. (Optional) Create a copy of `update.txt` and rename it to `update.sh`, and make it executable. 
+   ```bash
+   cp update.txt update.sh
+   chmod +x update.sh
+   ```
+   *This is used to speed up the updating/restarting of the bot on linux with PM2*
+
 Here are the guides for the "Configuring" sections, expanded with details and examples, following the structure you provided.
 
 -----
