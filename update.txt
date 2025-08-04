@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# This script automates the deployment process.
+# It performs a git pull, runs the build, and restarts the PM2 process.
+
+# --- Configuration ---
+set -e
+set -o pipefail
+
+# Path to your PM2 configuration file
+PM2_CONFIG_FILE="pm2.config.json"
+
+# --- Script Logic ---
+
+echo "Starting deployment process..."
+
+# 1. Run git pull
+echo "-------------------------------------"
+echo "1. Pulling latest changes from Git..."
+git pull
+
+# 2. Run pnpm build
+echo "-------------------------------------"
+echo "2. Running pnpm build..."
+pnpm build
+
+# 3. Extract the PM2 process name from pm2.config.json
+echo "-------------------------------------"
+echo "3. Extracting PM2 process name from ${PM2_CONFIG_FILE}..."
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null
+then
+    echo "Error: 'jq' is not installed. Please install it to parse JSON."
+    echo "On Debian/Ubuntu: sudo apt-get install jq"
+    echo "On macOS: brew install jq"
+    exit 1
+fi
+
+PROCESS_NAME=$(jq -r '.apps[0].name' "$PM2_CONFIG_FILE")
+
+if [ -z "$PROCESS_NAME" ]; then
+    echo "Error: Could not extract process name from ${PM2_CONFIG_FILE}."
+    echo "Ensure 'name' exists within the first app in 'apps' array."
+    exit 1
+fi
+
+echo "Extracted PM2 process name: \"$PROCESS_NAME\""
+
+# 4. Restart the PM2 process
+echo "-------------------------------------"
+echo "4. Restarting PM2 process: \"$PROCESS_NAME\"..."
+pm2 restart "$PROCESS_NAME"
+
+echo "-------------------------------------"
+echo "Deployment process completed successfully!"
