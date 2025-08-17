@@ -4,8 +4,12 @@ import SlashCommand from "../classes/slash_command";
 export default new SlashCommand({
     name: 'help',
     guildSpecific: false,
+    hideFromHelp: true,
     slashcommand: new SlashCommandBuilder()
         .setName('help')
+        .setNameLocalizations({
+            'fr': 'aide'
+        })
         .setDescription('Displays a list of all available commands.')
         .setDescriptionLocalizations({
             'fr': 'Afficher les commandes disponibles',
@@ -26,8 +30,10 @@ export default new SlashCommand({
             .setColor('#0099ff')
             .setTitle('Commandes disponibles');
 
-        client.commands.forEach(command => {
-            const commandData = command.register();
+        for (const [, cmd] of client.commands) {
+            const commandData = cmd.register();
+
+            if (cmd.isHiddenForHelpCommand()) continue;
             
             const requiredPermissions = commandData.default_member_permissions;
 
@@ -37,17 +43,17 @@ export default new SlashCommand({
 
             const hasPermission = !resolvedPermissions || memberPermissions.has(resolvedPermissions);
 
-            if (commandData.description && hasPermission) {
-                const commandName = commandData.name_localizations?.[locale] ?? commandData.name;
-                const description = commandData.description_localizations?.[locale] ?? commandData.description;
+            if (!(commandData.description && hasPermission)) continue;
 
-                helpEmbed.addFields({
-                    name: `/${commandName}`,
-                    value: description,
-                    inline: false,
-                });
-            }
-        });
+            const commandName = commandData.name_localizations?.[locale] ?? commandData.name;
+            const description = commandData.description_localizations?.[locale] ?? commandData.description;
+
+            helpEmbed.addFields({
+                name: `/${commandName}`,
+                value: description,
+                inline: false,
+            });
+        }
 
         await interaction.reply({
             embeds: [helpEmbed],
