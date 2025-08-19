@@ -38,9 +38,12 @@ export default new SlashCommand({
             return;
         }
 
-        await channel.send({
+        const msg = await channel.send({
             files: [image.url]
         });
 
+        interaction.reply({
+            content: `Image envoyé: ${msg.url}`,
+        });
     }
 });
