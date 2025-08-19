@@ -6,7 +6,7 @@ export default new SlashCommand({
     name: 'media-reposter',
     guildSpecific: true,
     slashcommand: new SlashCommandBuilder()
-        .setName('report')
+        .setName('repost')
         .setDescription('Poster une image dans le channel officiel')
         .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageRoles)
         .addAttachmentOption(o => 
