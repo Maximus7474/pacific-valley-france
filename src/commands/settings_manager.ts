@@ -1,6 +1,5 @@
 import { EmbedBuilder, InteractionContextType, MessageFlags, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import SlashCommand from "../classes/slash_command";
-import DB from "../utils/database";
 import SettingsManager from "../handlers/setting_handler";
 
 export default new SlashCommand({
@@ -75,19 +74,6 @@ export default new SlashCommand({
                         })
                         .setRequired(true)
                 )
-                .addStringOption(o =>
-                    o.setName("type")
-                    .setDescription("The type of the new value for the setting.")
-                    .setDescriptionLocalizations({
-                        'fr': 'Le type de donnée pour la valeure.'
-                    })
-                    .setRequired(false)
-                    .setChoices(
-                        { name: 'string', value: 'string' },
-                        { name: 'integer', value: 'integer' },
-                        { name: 'object', value: 'object' }
-                    )
-                )
         ),
     callback: async (logger, client, interaction) => {
         if (
@@ -107,7 +93,7 @@ export default new SlashCommand({
             if (value !== null) {
                 const embed = new EmbedBuilder()
                     .setColor(0x5865F2)
-                    .setTitle(`Paramèètre: \`${key}\``)
+                    .setTitle(`Setting: \`${key}\``)
                     .setDescription(`\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``)
                     .addFields(
                         { name: "Type", value: `\`${typeof value}\``, inline: true }
@@ -116,15 +102,22 @@ export default new SlashCommand({
 
                 await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             } else {
-                await interaction.reply({ content: `Paramètre \`${key}\` est introuvable.`, flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: `Paramètre \`${key}\` inconnu.`, flags: MessageFlags.Ephemeral });
             }
         } else if (subcommand === "set") {
             const key = interaction.options.getString("key", true);
             const rawValue = interaction.options.getString("value", true);
-            const type = (interaction.options.getString("type") ?? 'string') as 'string' | 'integer' | 'object';
+
+            const currentValue = SettingsManager.get(key);
+            const type = typeof currentValue;
+
+            if (!currentValue) {
+                await interaction.reply({ content: `Paramètre \`${key}\` inconnu.`, flags: MessageFlags.Ephemeral });
+                return;
+            }
 
             let parsedValue: string | number | object = rawValue;
-            if (type === 'integer') {
+            if (type === 'number') {
                 const numValue = parseInt(rawValue.trim());
                 if (isNaN(numValue)) {
                     await interaction.reply({
@@ -165,17 +158,17 @@ export default new SlashCommand({
         const focusedOption = interaction.options.getFocused(true);
         const subcommand = interaction.options.getSubcommand();
 
-        if (subcommand === "get" && focusedOption.name === "key") {
-            const settings = await DB.all<{ name: string }>('SELECT `name` FROM `settings`');
+        if ((subcommand === "get" || subcommand === "set") && focusedOption.name === "key") {
+            const settings = SettingsManager.get_keys();
 
             const filtered = settings
                 .filter(setting =>
-                    setting.name.toLowerCase().startsWith(focusedOption.value.toLowerCase())
+                    setting.toLowerCase().startsWith(focusedOption.value.toLowerCase())
                 )
                 .slice(0, 25);
 
             await interaction.respond(
-                filtered.map(setting => ({ name: setting.name, value: setting.name }))
+                filtered.map(setting => ({ name: setting, value: setting }))
             );
         }
     },
