@@ -4,6 +4,7 @@ import help from "./help";
 import ping from "./ping";
 import session_manager from "./session_manager";
 import settings_manager from "./settings_manager";
+import share_media from "./share_media";
 import userinfo from "./userinfo";
 
 export default [
@@ -13,4 +14,5 @@ export default [
     userinfo,
     backup,
     help,
+    share_media,
 ] as SlashCommand[];
