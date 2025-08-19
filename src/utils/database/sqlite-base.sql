@@ -73,5 +73,6 @@ END;
 INSERT OR IGNORE INTO `player_groups` (`name`, `acronym`, `emoji`, `added_by`)
     VALUES ('Civil', 'Civil', '👤', 'System');
 
-INSERT OR IGNORE INTO `settings` (`name`, `data_type`, `value`)
-    VALUES ('session_channel', 'string', '1258888271262388444');
+INSERT OR IGNORE INTO `settings` (`name`, `data_type`, `value`) VALUES 
+    ('session_channel', 'string', '1258888271262388444'),
+    ('media-reposter-channel', 'string', '1401606221076762644');
