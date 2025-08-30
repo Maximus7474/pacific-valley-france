@@ -407,11 +407,12 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
     const whitelistRole = Settings.get<string>('whitelist-role');
 
     if (whitelistRole && (!member || !member?.roles.cache.has(whitelistRole))) {
-        await interaction.reply(
-            `Vous n'êtes pas membre du projet, vous ne pouvez donc participer.\n`+
-            `Pour plus d'information pour rejoindre le projet, consulter:\n`+
-            `> https://discord.com/channels/1368181578097754253/1401966952280490106`
-        );
+        await interaction.reply({
+            content: `Vous n'êtes pas membre du projet, vous ne pouvez donc participer.\n`+
+                `Pour plus d'information pour rejoindre le projet, consulter:\n`+
+                `> https://discord.com/channels/1368181578097754253/1401966952280490106`,
+            flags: MessageFlags.Ephemeral,
+        });
         return;
     }
 
