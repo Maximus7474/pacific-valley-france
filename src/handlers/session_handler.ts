@@ -509,8 +509,8 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
         }
 
         DB.run(
-            'UPDATE `session_participants` SET `late` = 1, `absent` = 0 WHERE `user` = ? AND `session` = ?',
-            [user.id, sessionId]
+            'UPDATE `session_participants` SET `late` = ?, `absent` = 0 WHERE `user` = ? AND `session` = ?',
+            [!userAnswer?.late, user.id, sessionId]
         );
 
         interaction.reply({
