@@ -408,7 +408,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
 
     const whitelistRole = Settings.get<string>('whitelist-role');
 
-    if (whitelistRole && member.roles.cache.has(whitelistRole)) {
+    if (whitelistRole && !member.roles.cache.has(whitelistRole)) {
         await interaction.reply({
             content: `Vous n'êtes pas membre du projet, vous ne pouvez donc participer.\n`+
                 `Pour plus d'information pour rejoindre le projet, consulter:\n`+
