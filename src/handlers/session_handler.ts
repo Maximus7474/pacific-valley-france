@@ -622,7 +622,7 @@ async function HandleInteraction(client: DiscordClient, interaction: ButtonInter
             .map(({ user }: SessionParticipantResponse) => `* <@${user}>`);
 
         const presentList = Object.entries(presentResponses)
-            .filter(([groupName]) => groupName !== 'absent')
+            .filter(([groupName]) => playerGroups[groupName])
             .reduce((acc: {[key: string]: string[];}, [groupName, participants]) => {
                 if (participants.length === 0) {
                     acc[groupName] = [];
