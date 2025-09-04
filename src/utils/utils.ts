@@ -77,10 +77,17 @@ export const GetEmojiResolvable = (emoji: string): ComponentEmojiResolvable => {
     return { name: '❓' };
 }
 
+const idRegex = /(\d+)/;
+
 const channelMentionRegex = /<#(\d+)>/;
 const channelLinkRegex = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)/;
 
 export const GetChannelIdFromMention = (mention: string): string | null => {
+    const idMatch = mention.match(idRegex);
+    if (idMatch) {
+        return idMatch[1];
+    }
+
     const mentionMatch = mention.match(channelMentionRegex);
     if (mentionMatch) {
         return mentionMatch[1];
@@ -97,6 +104,11 @@ export const GetChannelIdFromMention = (mention: string): string | null => {
 const roleMentionRegex = /<@&(\d+)>/;
 
 export const GetRoleIdFromMention = (mention: string): string | null => {
+    const idMatch = mention.match(idRegex);
+    if (idMatch) {
+        return idMatch[1];
+    }
+
     const mentionMatch = mention.match(roleMentionRegex);
     if (mentionMatch) {
         return mentionMatch[1];
