@@ -1,6 +1,26 @@
 import { EmbedBuilder, InteractionContextType, MessageFlags, PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import SlashCommand from "../classes/slash_command";
-import SettingsManager from "../handlers/setting_handler";
+import SettingsManager, { type SettingDataType, type SettingDataDisplayTypes } from "../handlers/setting_handler";
+import { GetChannelIdFromMention, GetRoleIdFromMention } from "../utils/utils";
+
+function displaySettingValue(value: string | number | object, type: SettingDataDisplayTypes) {
+    switch (type) {
+        case "object":
+            return (
+                '```json\n'+
+                JSON.stringify(value, null, 2)+
+                '\n```'
+            );
+        case "channel_id":
+            return `<#${value}>`;
+        case "role_id":
+            return `<@&${value}>`;
+        default:
+            return (
+                `\`\`\`json\n${value}\n\`\`\``
+            );
+    }
+}
 
 export default new SlashCommand({
     name: "settings",
@@ -88,15 +108,16 @@ export default new SlashCommand({
 
         if (subcommand === "get") {
             const key = interaction.options.getString("key", true);
-            const value = SettingsManager.get(key);
+            const value = SettingsManager.get<SettingDataType>(key);
+            const dataType = SettingsManager.getDataType(key);
 
-            if (value !== null) {
+            if (value !== null && dataType !== null) {
                 const embed = new EmbedBuilder()
                     .setColor(0x5865F2)
                     .setTitle(`Setting: \`${key}\``)
-                    .setDescription(`\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``)
+                    .setDescription(displaySettingValue(value, dataType))
                     .addFields(
-                        { name: "Type", value: `\`${typeof value}\``, inline: true }
+                        { name: "Type", value: `\`${dataType}\``, inline: true }
                     )
                     .setTimestamp();
 
@@ -106,19 +127,21 @@ export default new SlashCommand({
             }
         } else if (subcommand === "set") {
             const key = interaction.options.getString("key", true);
-            const rawValue = interaction.options.getString("value", true);
+            const rawValue = interaction.options.getString("value", true).trim();
 
             const currentValue = SettingsManager.get(key);
-            const type = typeof currentValue;
+            const type = SettingsManager.getDataType(key);
 
-            if (!currentValue) {
+            if (!currentValue || !type) {
                 await interaction.reply({ content: `Paramètre \`${key}\` inconnu.`, flags: MessageFlags.Ephemeral });
                 return;
             }
 
-            let parsedValue: string | number | object = rawValue;
+            let parsedValue: NonNullable<SettingDataType> = rawValue;
+
             if (type === 'number') {
-                const numValue = parseInt(rawValue.trim());
+                const numValue = parseInt(rawValue);
+
                 if (isNaN(numValue)) {
                     await interaction.reply({
                         content: `Valeur entière invalide fournie pour \`${key}\`. Veuillez saisir un numéro valide..`,
@@ -126,15 +149,55 @@ export default new SlashCommand({
                     });
                     return;
                 }
+
                 parsedValue = numValue;
             } else if (type === 'object') {
                 try {
-                    parsedValue = JSON.parse(rawValue.trim());
+                    parsedValue = JSON.parse(rawValue);
                 } catch (err) {
                     await interaction.reply({
                         content: `Objet JSON invalide fourni pour \`${key}\`. Veuillez vous assurer qu'il s'agit d'un JSON valide..\n> ${(err as Error).message}`,
                         ephemeral: true
                     });
+
+                    return;
+                }
+            } else if (type === 'channel_id') {
+                try {
+                    const channelId = GetChannelIdFromMention(rawValue);
+                    console.log('channelId', channelId);
+
+                    if (!channelId) throw new Error('Aucune mention de channel a été trouvé')
+
+                    const channel = await client.channels.fetch(channelId);
+
+                    if (channel) parsedValue = channel.id;
+                    else throw new Error('Aucun channel de trouvé');
+                } catch (err) {
+                    await interaction.reply({
+                        content: `Channel fournis pour \`${key}\` est invalid. Veuillez renseigner un channel valide.\n> ${(err as Error).message}`,
+                        ephemeral: true
+                    });
+
+                    return;
+                }
+            } else if (type === 'role_id') {
+                try {
+                    const roleId = GetRoleIdFromMention(rawValue);
+                    console.log('roleId', roleId);
+
+                    if (!roleId) throw new Error('Aucune mention de role a été trouvé');
+
+                    const role = await interaction.guild!.roles.fetch(roleId);
+
+                    if (role) parsedValue = role.id;
+                    else throw new Error('Aucun rôle de trouvé');
+                } catch (err) {
+                    await interaction.reply({
+                        content: `Channel fournis pour \`${key}\` est invalid. Veuillez renseigner un channel valide.\n> ${(err as Error).message}`,
+                        ephemeral: true
+                    });
+
                     return;
                 }
             }
@@ -144,9 +207,10 @@ export default new SlashCommand({
             const embed = new EmbedBuilder()
                 .setColor(0x57F287)
                 .setTitle("Paramètre mis à jour!")
-                .setDescription(`Configuration réussie du paramètre \`${key}\` avec:\n\`\`\`json\n${JSON.stringify(parsedValue, null, 2)}\n\`\`\``)
+                .setDescription(`Configuration réussie du paramètre \`${key}\``)
                 .addFields(
-                    { name: "Type", value: `\`${typeof parsedValue}\``, inline: true }
+                    { name: "Donnée", value:displaySettingValue(parsedValue, type), inline: true },
+                    { name: "Type", value: `\`${type}\``, inline: true },
                 )
                 .setTimestamp();
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
