@@ -54,6 +54,10 @@ class SettingsManager {
         return this.settings.get(key)?.value as T ?? null;
     }
 
+    getDataType(key: string): SettingDataDisplayTypes | null {
+        return this.settings.get(key)?.type ?? null;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     set(key: string, value: any) {
         if (!this.settings.has(key)) {
