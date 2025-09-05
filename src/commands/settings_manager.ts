@@ -194,7 +194,7 @@ export default new SlashCommand({
                     else throw new Error('Aucun rôle de trouvé');
                 } catch (err) {
                     await interaction.reply({
-                        content: `Channel fournis pour \`${key}\` est invalid. Veuillez renseigner un channel valide.\n> ${(err as Error).message}`,
+                        content: `Rôle fournis pour \`${key}\` est invalid. Veuillez renseigner un rôle valide.\n> ${(err as Error).message}`,
                         ephemeral: true
                     });
 
